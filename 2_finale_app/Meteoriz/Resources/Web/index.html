@@ -617,17 +617,51 @@ function buildHourlySvg(hTemps,hCodes,hPrecip,startOff,gKey){
   const totalH=iconZone+curveH+barZone+timeZone;
   const minV=Math.min(...hTemps)-1, maxV=Math.max(...hTemps)+1, range=maxV-minV||1;
   const xOf=i=>pad+(i/(n-1))*(W-pad*2);
-  // Die Kurvenlinie selbst beginnt weiterhin bei pad (ganz am linken Rand). Nur die
-  // Stunden-Markierung (Punkt+Icon+Uhrzeit) an JEDER Seiten-Kante (i=0,12,24,… – der
-  // linke Rand jeder der bis zu 3 wischbaren 12h-Seiten) wird zusätzlich nach rechts
-  // gerückt, damit ihre Uhrzeit-Beschriftung nicht am Rand angeschnitten wird; alle
-  // übrigen Markierungen bleiben auf ihrer normalen Linien-Position.
+  // Die Kurvenlinie selbst beginnt weiterhin bei pad (ganz am linken Rand). Die ERSTE
+  // Stunden-Markierung jeder Seite (i=0,12,24,…) bleibt UNVERÄNDERT bei xOf(i)+markerInset
+  // (bewusst identische Formel wie zuvor – dieser linke Rand ist bereits korrekt und darf
+  // nicht angefasst werden). Die LETZTE Markierung jeder Seite (lokal Stunde 9) rückt neu
+  // mit demselben Randabstand an die rechte Seitenkante; die zwei mittleren Markierungen
+  // (lokal 3 und 6) werden gleichmässig zwischen erster und letzter Position verteilt.
+  // Die Seitenkanten selbst werden über xOf() der jeweils angrenzenden Stunde bestimmt
+  // (nicht über eine angenommene Pixelbreite pro Seite) – dadurch bleiben Markierungen
+  // und Kurvenlinie immer konsistent zueinander, ohne dass etwas von der nächsten Seite
+  // vor dem Wischen sichtbar hereinragt.
   const markerInset=isMob?14:0;
-  const markerXOf=i=>(isMob&&i%12===0)?xOf(i)+markerInset:xOf(i);
+  const markerXOf=i=>{
+    if(!isMob) return xOf(i);
+    const local=i%12;
+    if(local===0) return xOf(i)+markerInset;
+    const p=Math.floor(i/12);
+    const firstX=xOf(p*12)+markerInset;
+    // Die erste Markierung hat effektiv pad+markerInset (18+14=32 Einheiten) Abstand vom
+    // linken Rand (xOf(0)=pad, plus +markerInset). Die letzte Markierung braucht denselben
+    // Gesamtabstand vom rechten Rand ihrer Seite – nicht nur markerInset allein, sonst wirkt
+    // rechts deutlich enger als links. Die Seitengrenze ist die ECHTE, geometrische
+    // Seitenbreite (p+1)*360 (nicht xOf((p+1)*12), das ab Stunde 12 nach rechts wegdriftet
+    // und die Markierung über die vom Scroll-Container abgeschnittene Kante hinausschieben
+    // würde – genau das vom Nutzer gemeldete Durchschimmern der Folgeseite).
+    const pageRight=(p+1)*360;
+    const lastX=pageRight-(pad+markerInset);
+    if(local===9) return lastX;
+    return firstX+((local/3)/3)*(lastX-firstX);
+  };
   const curveBot=iconZone+curveH;
   const topPad=tFnt+4;
   const yOf=t=>curveBot-4-((t-minV)/range)*(curveH-12-topPad);
   const pts=hTemps.map((t,i)=>`${xOf(i).toFixed(1)},${yOf(t).toFixed(1)}`).join(' ');
+  // Da die 3 rechten Markierungen pro Seite jetzt seitlich von ihrer "wahren" Stunden-
+  // Position abweichen können, wird ihre Y-Position dort berechnet, wo die echte Kurve
+  // an dieser X-Koordinate tatsächlich verläuft (Interpolation zwischen den beiden
+  // umliegenden Datenpunkten) – der Punkt sitzt so immer sichtbar AUF der Linie, die
+  // angezeigte Zahl bleibt exakt der echte Stundenwert.
+  const yAtX=x=>{
+    const cx=Math.max(xOf(0),Math.min(xOf(n-1),x));
+    let j=0;
+    while(j<n-2&&xOf(j+1)<cx) j++;
+    const x0=xOf(j), x1=xOf(j+1), t=x1>x0?(cx-x0)/(x1-x0):0;
+    return yOf(hTemps[j]+(hTemps[j+1]-hTemps[j])*t);
+  };
 
   // Time labels every 3h; mobile stops before last data point (no boundary dup), desktop shows end label
   const labelMax=isMob?n-1:n;
@@ -644,7 +678,7 @@ function buildHourlySvg(hTemps,hCodes,hPrecip,startOff,gKey){
   for(let i=0;i<n;i+=3){
     const hr=(startOff+i)%24;
     icons+=`<text x="${markerXOf(i).toFixed(1)}" y="${iconZone-8}" font-family="serif" font-size="${iFnt}" text-anchor="middle">${wIcon(hCodes[i]??0,hr>=21||hr<6)}</text>`;
-    const x=markerXOf(i), y=yOf(hTemps[i]), col=tCol(hTemps[i]);
+    const x=markerXOf(i), y=yAtX(x), col=tCol(hTemps[i]);
     const lbl=(hTemps[i]>=0?'+':'')+Math.round(hTemps[i])+'°';
     tempMarks+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${dotR}" fill="${col}" stroke="rgba(6,8,13,0.9)" stroke-width="1.5"/>`;
     tempMarks+=`<text x="${x.toFixed(1)}" y="${(y-dotR-4).toFixed(1)}" font-family="'Bebas Neue',sans-serif" font-size="${tFnt}" fill="${col}" text-anchor="middle">${lbl}</text>`;
