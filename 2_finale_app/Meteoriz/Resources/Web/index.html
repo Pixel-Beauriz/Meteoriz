@@ -545,14 +545,102 @@ function dayWeatherIcons(hCodes,hStart,isToday,night){
   };
 }
 
-// ── OPEN-METEO FORECAST ──
+// ── MeteoSchweiz LOKALPROGNOSE ──
+// Die MeteoSchweiz-Sammeldateien (Open Data) enthalten alle ~5600 Orte der
+// Schweiz auf einmal (~30 MB pro Parameter) – zu gross, um sie direkt vom
+// Handy aus abzurufen. Eine GitHub Action lädt sie stattdessen stündlich
+// stellvertretend herunter und zerlegt sie in winzige Pro-Ort-Dateien
+// (siehe scripts/build_forecast_data.py) im 'data'-Branch dieses Repos.
+// Die App lädt daraus nur die eine zum Standort passende Datei (~1–2 KB).
+const MCH_DATA_BASE='https://raw.githubusercontent.com/Pixel-Beauriz/Meteoriz/data';
+
+// MeteoSchweiz-Wetterpiktogramm (1–42 tagsüber, 101–142 nachts) auf einen
+// repräsentativen WMO-Wettercode abgebildet, damit die bestehende Icon-Logik
+// (weatherCategory/wIcon, siehe oben – wird auch von der Stationsanzeige
+// genutzt) unverändert weiterfunktioniert; nur die Datenquelle ändert sich.
+const MCH_TO_WMO={
+  1:0,2:1,3:2,4:3,5:3,
+  6:80,7:71,8:71,9:80,10:71,11:71,
+  12:95,13:95,
+  14:61,15:71,16:71,17:61,18:73,19:71,
+  20:65,21:75,22:75,23:95,24:95,25:96,
+  26:3,27:45,28:45,
+  29:80,30:71,31:71,32:80,33:80,34:71,
+  35:3,36:95,37:96,38:95,39:96,40:95,41:95,42:96
+};
+function mchToWmo(code){
+  if(code==null) return 3;
+  return MCH_TO_WMO[code>100?code-100:code]??3;
+}
+
+let mchPoiCache=null;
+async function loadMchPois(){
+  if(mchPoiCache) return mchPoiCache;
+  const res=await fetch(`${MCH_DATA_BASE}/poi.json`);
+  mchPoiCache=await res.json(); // [[point_id,point_type_id,lat,lon], ...]
+  return mchPoiCache;
+}
+
+function nearestMchPoi(lat,lon,pois){
+  let best=null,bestD=Infinity;
+  for(const p of pois){
+    const d=(p[2]-lat)**2+(p[3]-lon)**2;
+    if(d<bestD){bestD=d;best=p;}
+  }
+  return best;
+}
+
+// Formt die kompakte MeteoSchweiz-Pro-Ort-Datei in dieselbe Struktur, die
+// vorher Open-Meteo geliefert hat, damit renderForecast()/buildDetailPanel()/
+// buildHourlySvg() unverändert weiterlaufen.
+function mchToForecastData(mch,lat,lon){
+  const hours=mch.hourly.temp.length;
+  // picto3h ist nur alle 3 Std. vorhanden; auf die dazwischenliegenden
+  // Stunden vorwärts auffüllen (die Render-Funktionen lesen das Icon ohnehin
+  // nur an 3-Std.-Grenzen, aber so bleibt das Array auch robust für alles,
+  // was künftig einzelne Stunden lesen könnte).
+  const weathercode=new Array(hours).fill(null);
+  mch.picto3h.forEach((code,i)=>{
+    const wmo=mchToWmo(code);
+    const h=i*3;
+    for(let k=0;k<3&&h+k<hours;k++) weathercode[h+k]=wmo;
+  });
+  const dailySunrise=[], dailySunset=[];
+  mch.daily.dates.forEach(dateStr=>{
+    // MeteoSchweiz liefert keinen Sonnenauf-/-untergang mit; dieselbe
+    // astronomische Berechnung wie im Rest der App (renderSunInfo) nutzen.
+    const sun=calcSunTimes(lat,lon,new Date(dateStr+'T12:00:00'));
+    dailySunrise.push(sun?`${dateStr}T${sun.rise}:00`:`${dateStr}T06:00:00`);
+    dailySunset.push(sun?`${dateStr}T${sun.set}:00`:`${dateStr}T20:00:00`);
+  });
+  return {
+    hourly:{
+      temperature_2m:mch.hourly.temp,
+      precipitation:mch.hourly.precip,
+      weathercode
+    },
+    daily:{
+      time:mch.daily.dates,
+      temperature_2m_max:mch.daily.tmax,
+      temperature_2m_min:mch.daily.tmin,
+      weathercode:mch.daily.picto.map(mchToWmo),
+      sunrise:dailySunrise,
+      sunset:dailySunset
+    }
+  };
+}
+
 async function loadForecast(lat,lon){
   const wrap=document.getElementById('forecastWrap');
   wrap.innerHTML='<div class="forecast-loading">Prognose lädt…</div>';
   try{
-    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation,precipitation_probability,weathercode,windspeed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode,sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=5`;
-    const res=await fetch(url);
-    forecastData=await res.json();
+    const pois=await loadMchPois();
+    const poi=nearestMchPoi(lat,lon,pois);
+    if(!poi) throw new Error('Kein MeteoSchweiz-Prognosepunkt gefunden');
+    const res=await fetch(`${MCH_DATA_BASE}/forecasts/${poi[0]}-${poi[1]}.json`);
+    if(!res.ok) throw new Error('MeteoSchweiz-Prognose nicht erreichbar');
+    const mch=await res.json();
+    forecastData=mchToForecastData(mch,lat,lon);
     renderForecast(wrap, forecastData, lat, lon);
     notifyNativeSuccess();
   } catch(e){
