@@ -1,0 +1,363 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		15B7DD1CB229479CC7E7DDAC /* NativeGeocoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF199A91F97A8512E0F26B5D /* NativeGeocoder.swift */; };
+		20D25B6579B78F5174A4F06A /* DebugLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA29FF6DDEBDECFAA09B50CB /* DebugLogView.swift */; };
+		29D91003E554D2C505EDE05B /* WeatherWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD40BF1D2FD9B74A72922A19 /* WeatherWebView.swift */; };
+		3E622007FB250C8671E06692 /* RefreshState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5250843CC53084F7996DCE6A /* RefreshState.swift */; };
+		5FFBB929D33136339B6AE6EF /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6508E4CBDFA9B932D9C8D92C /* ContentView.swift */; };
+		722F66BD9DE57C0EFE11E3CB /* MeteorizApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42D765832B4468DBDFA16F4D /* MeteorizApp.swift */; };
+		76C4D0E64FBB1B336C012DA9 /* Web in Resources */ = {isa = PBXBuildFile; fileRef = 2A651D8849FFAB83EE753FA7 /* Web */; };
+		7E5AA1CCB7608D92DF546ED6 /* ErrorBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C44F24FE2F8B827531FDC2AD /* ErrorBannerView.swift */; };
+		D89F6035325398641E0B07C3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 095B43659E732AE785B928A5 /* Assets.xcassets */; };
+		E07947CCE00799D0FBA33965 /* LocationBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 939C35BE84B1CA33CCAAD55B /* LocationBridge.swift */; };
+		EC52CBF64F55C6C8F5554E9C /* DiagnosticsLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE253AD3D3D583F48AFBD407 /* DiagnosticsLog.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		02517C4CBFDC0FA7CE1F6C32 /* Meteoriz.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Meteoriz.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		095B43659E732AE785B928A5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2A651D8849FFAB83EE753FA7 /* Web */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Web; path = Resources/Web; sourceTree = SOURCE_ROOT; };
+		34043965B01301B24C6280C0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		42D765832B4468DBDFA16F4D /* MeteorizApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeteorizApp.swift; sourceTree = "<group>"; };
+		5250843CC53084F7996DCE6A /* RefreshState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefreshState.swift; sourceTree = "<group>"; };
+		6508E4CBDFA9B932D9C8D92C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		939C35BE84B1CA33CCAAD55B /* LocationBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationBridge.swift; sourceTree = "<group>"; };
+		BE253AD3D3D583F48AFBD407 /* DiagnosticsLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsLog.swift; sourceTree = "<group>"; };
+		C44F24FE2F8B827531FDC2AD /* ErrorBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorBannerView.swift; sourceTree = "<group>"; };
+		CA29FF6DDEBDECFAA09B50CB /* DebugLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLogView.swift; sourceTree = "<group>"; };
+		CF199A91F97A8512E0F26B5D /* NativeGeocoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeGeocoder.swift; sourceTree = "<group>"; };
+		FD40BF1D2FD9B74A72922A19 /* WeatherWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherWebView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		62BBA921498C975D45F0FDA3 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				2A651D8849FFAB83EE753FA7 /* Web */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		6B5B49E783016AADC487616F /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				6508E4CBDFA9B932D9C8D92C /* ContentView.swift */,
+				CA29FF6DDEBDECFAA09B50CB /* DebugLogView.swift */,
+				BE253AD3D3D583F48AFBD407 /* DiagnosticsLog.swift */,
+				C44F24FE2F8B827531FDC2AD /* ErrorBannerView.swift */,
+				34043965B01301B24C6280C0 /* Info.plist */,
+				939C35BE84B1CA33CCAAD55B /* LocationBridge.swift */,
+				42D765832B4468DBDFA16F4D /* MeteorizApp.swift */,
+				CF199A91F97A8512E0F26B5D /* NativeGeocoder.swift */,
+				5250843CC53084F7996DCE6A /* RefreshState.swift */,
+				FD40BF1D2FD9B74A72922A19 /* WeatherWebView.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		B2C0CF96670E35AF40CB990C = {
+			isa = PBXGroup;
+			children = (
+				095B43659E732AE785B928A5 /* Assets.xcassets */,
+				62BBA921498C975D45F0FDA3 /* Resources */,
+				6B5B49E783016AADC487616F /* Sources */,
+				B87CFEFFC4BE74922909040A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B87CFEFFC4BE74922909040A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				02517C4CBFDC0FA7CE1F6C32 /* Meteoriz.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D283944747C73B5EB881094C /* Meteoriz */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC0CFC8E209C77604D21022E /* Build configuration list for PBXNativeTarget "Meteoriz" */;
+			buildPhases = (
+				F78B1CE2D39E417B15F86A3C /* Sources */,
+				28A64619B6C96369FC2396E9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Meteoriz;
+			packageProductDependencies = (
+			);
+			productName = Meteoriz;
+			productReference = 02517C4CBFDC0FA7CE1F6C32 /* Meteoriz.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		749B98D782DAD925C3543B7B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					D283944747C73B5EB881094C = {
+						DevelopmentTeam = T74MS2C433;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 2D8AF13EDB488F374ADA2B0D /* Build configuration list for PBXProject "Meteoriz" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = B2C0CF96670E35AF40CB990C;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B87CFEFFC4BE74922909040A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D283944747C73B5EB881094C /* Meteoriz */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		28A64619B6C96369FC2396E9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D89F6035325398641E0B07C3 /* Assets.xcassets in Resources */,
+				76C4D0E64FBB1B336C012DA9 /* Web in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F78B1CE2D39E417B15F86A3C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5FFBB929D33136339B6AE6EF /* ContentView.swift in Sources */,
+				20D25B6579B78F5174A4F06A /* DebugLogView.swift in Sources */,
+				EC52CBF64F55C6C8F5554E9C /* DiagnosticsLog.swift in Sources */,
+				7E5AA1CCB7608D92DF546ED6 /* ErrorBannerView.swift in Sources */,
+				E07947CCE00799D0FBA33965 /* LocationBridge.swift in Sources */,
+				722F66BD9DE57C0EFE11E3CB /* MeteorizApp.swift in Sources */,
+				15B7DD1CB229479CC7E7DDAC /* NativeGeocoder.swift in Sources */,
+				3E622007FB250C8671E06692 /* RefreshState.swift in Sources */,
+				29D91003E554D2C505EDE05B /* WeatherWebView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		2A51E0E48035E933DED1F9ED /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		50176C547DB7BA24F9593373 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		5AE794170B61AB359F058331 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = T74MS2C433;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Sources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = ch.beuckmann.meteoriz;
+				PRODUCT_NAME = Meteoriz;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E5021A842396467C24B7CDEE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = T74MS2C433;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Sources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = ch.beuckmann.meteoriz;
+				PRODUCT_NAME = Meteoriz;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2D8AF13EDB488F374ADA2B0D /* Build configuration list for PBXProject "Meteoriz" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2A51E0E48035E933DED1F9ED /* Debug */,
+				50176C547DB7BA24F9593373 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DC0CFC8E209C77604D21022E /* Build configuration list for PBXNativeTarget "Meteoriz" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E5021A842396467C24B7CDEE /* Debug */,
+				5AE794170B61AB359F058331 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 749B98D782DAD925C3543B7B /* Project object */;
+}
