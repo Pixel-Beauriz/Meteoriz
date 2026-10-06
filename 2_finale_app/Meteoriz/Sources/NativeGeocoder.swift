@@ -11,11 +11,15 @@ import WebKit
 /// unvollständigen Eingaben ("Base") oft unpassende Strassennamen vor dem naheliegenden
 /// Ortsnamen ("Basel"). MKLocalSearchCompleter ist Apples Tippvervollständigungs-Engine
 /// (dieselbe wie in der Maps-App-Suchleiste) und liefert dafür deutlich bessere Treffer.
-final class NativeGeocoder: NSObject, MKLocalSearchCompleterDelegate {
+final class NativeGeocoder: NSObject {
     private weak var webView: WKWebView?
     private let diagnostics: DiagnosticsLog
-    private let completer = MKLocalSearchCompleter()
-    private var completionHandler: (([MKLocalSearchCompletion]) -> Void)?
+    /// Pro Suchanfrage ein eigener Completer. Ein gemeinsamer Completer meldet sich nicht
+    /// erneut, wenn die Treffer beim Weitertippen oder Löschen gleich bleiben – die Seite
+    /// wartete dann ewig auf eine Antwort, und schnelle Eingaben überschrieben sich gegenseitig.
+    private var suggestionRequests: [Int: SuggestionRequest] = [:]
+    /// Vorschläge ohne Antwort von Apple werden nach dieser Zeit mit dem Bisherigen beantwortet.
+    private static let suggestionTimeout: TimeInterval = 2.5
 
     private let switzerlandRegion = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 46.8, longitude: 8.2),
@@ -25,9 +29,6 @@ final class NativeGeocoder: NSObject, MKLocalSearchCompleterDelegate {
     init(diagnostics: DiagnosticsLog) {
         self.diagnostics = diagnostics
         super.init()
-        completer.region = switzerlandRegion
-        completer.resultTypes = [.address, .pointOfInterest]
-        completer.delegate = self
     }
 
     func attach(webView: WKWebView) {
@@ -61,28 +62,21 @@ final class NativeGeocoder: NSObject, MKLocalSearchCompleterDelegate {
             resolve(id: id, json: [])
             return
         }
-        completionHandler = { [weak self] completions in
+        suggestionRequests[id] = SuggestionRequest(
+            query: trimmed,
+            region: switzerlandRegion,
+            timeout: Self.suggestionTimeout
+        ) { [weak self] completions in
+            self?.suggestionRequests[id] = nil
             self?.resolveCompletions(id: id, completions: completions, limit: limit)
         }
-        completer.queryFragment = trimmed
-    }
-
-    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-        completionHandler?(completer.results)
-        completionHandler = nil
-    }
-
-    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-        diagnostics.log(.info, source: "Geocoding", "Vorschläge ohne Treffer: \(error.localizedDescription)")
-        completionHandler?([])
-        completionHandler = nil
     }
 
     /// Jede Vervollständigung (nur Titel/Untertitel) braucht noch eine echte Koordinate –
     /// dafür pro Vorschlag eine gezielte MKLocalSearch, parallel, danach in Original-
     /// Reihenfolge wieder zusammengesetzt.
     private func resolveCompletions(id: Int, completions: [MKLocalSearchCompletion], limit: Int) {
-        let candidates = Array(completions.prefix(limit))
+        let candidates = Array(completions.prefix(max(limit * 2, 12)))
         guard !candidates.isEmpty else {
             resolve(id: id, json: [])
             return
@@ -101,7 +95,7 @@ final class NativeGeocoder: NSObject, MKLocalSearchCompleterDelegate {
         group.notify(queue: .main) { [weak self] in
             guard let self else { return }
             let ordered = candidates.indices.compactMap { resultsByIndex[$0] }
-            self.resolve(id: id, json: ordered)
+            self.resolve(id: id, json: Array(ordered.prefix(limit)))
         }
     }
 
@@ -159,5 +153,40 @@ final class NativeGeocoder: NSObject, MKLocalSearchCompleterDelegate {
         DispatchQueue.main.async { [weak self] in
             self?.webView?.evaluateJavaScript(js, completionHandler: nil)
         }
+    }
+}
+
+/// Eine einzelne Vorschlagsanfrage an Apples Ortssuche (MKLocalSearchCompleter) mit Zeitlimit.
+/// Antwortet genau einmal – mit den Treffern, einem Fehler (leer) oder nach Ablauf der Zeit.
+private final class SuggestionRequest: NSObject, MKLocalSearchCompleterDelegate {
+    private let completer = MKLocalSearchCompleter()
+    private var completion: (([MKLocalSearchCompletion]) -> Void)?
+
+    init(query: String, region: MKCoordinateRegion, timeout: TimeInterval,
+         completion: @escaping ([MKLocalSearchCompletion]) -> Void) {
+        self.completion = completion
+        super.init()
+        completer.region = region
+        completer.resultTypes = [.address, .pointOfInterest]
+        completer.delegate = self
+        completer.queryFragment = query
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { [weak self] in
+            guard let self else { return }
+            self.finish(self.completer.results)
+        }
+    }
+
+    private func finish(_ results: [MKLocalSearchCompletion]) {
+        guard let completion else { return }
+        self.completion = nil
+        completion(results)
+    }
+
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        finish(completer.results)
+    }
+
+    func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
+        finish([])
     }
 }

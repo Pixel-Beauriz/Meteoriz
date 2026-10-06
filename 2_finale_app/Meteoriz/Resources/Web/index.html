@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>MeteoLive – Schweiz</title>
 <link rel="stylesheet" href="fonts/fonts.css">
+<script src="places.js"></script>
 <style>
 :root{
   --bg:#06080d;--bg2:#0c1018;--surface:#111620;--surface2:#181f2e;
@@ -308,14 +309,10 @@ body.view-stations .stations-view{display:block}
   .detail-title{font-size:12.8px;letter-spacing:3px}
   .detail-sun{display:none}
 
-  /* Hourly swipe */
-  .hourly-scroll-wrap{display:flex;overflow-x:scroll;overflow-y:hidden;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scrollbar-width:none}
+  /* Stundenkurve: ein durchgehender, frei scrollbarer Streifen über die ganze Prognose */
+  .hourly-scroll-wrap{display:block;overflow-x:scroll;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain}
   .hourly-scroll-wrap::-webkit-scrollbar{display:none}
-  .hourly-page{flex:0 0 100%;scroll-snap-align:start}
-  .hourly-dots{display:flex;justify-content:center;gap:7px;padding:14px 0 12px}
-  .detail-inner .detail-sun-left{margin-top:8px}
-  .hourly-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);transition:background .2s;display:inline-block}
-  .hourly-dot.active{background:var(--accent)}
+  .detail-inner .detail-sun-left{margin-top:14px}
 
   .kanton-module{margin-top:40px}
   .stations-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
@@ -349,7 +346,7 @@ body.view-stations .stations-view{display:block}
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3.5"/><line x1="8" y1="0" x2="8" y2="4"/><line x1="8" y1="12" x2="8" y2="16"/><line x1="0" y1="8" x2="4" y2="8"/><line x1="12" y1="8" x2="16" y2="8"/></svg>
         </button>
         <div class="search-wrap">
-          <input type="text" id="mobileLocationSearch" class="mobile-location-input" placeholder="Ort suchen…" autocomplete="off">
+          <input type="text" id="mobileLocationSearch" class="mobile-location-input" placeholder="Ort suchen…" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="search">
           <div class="suggest-dropdown" id="suggestMobile"></div>
         </div>
       </div>
@@ -365,7 +362,7 @@ body.view-stations .stations-view{display:block}
             <span id="geoStatusText">Geolokalisierung läuft…</span>
           </div>
           <div class="search-wrap">
-            <input type="text" id="locationSearch" class="location-search" placeholder="Ort suchen…" autocomplete="off">
+            <input type="text" id="locationSearch" class="location-search" placeholder="Ort suchen…" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" enterkeyhint="search">
             <div class="suggest-dropdown" id="suggestDesktop"></div>
           </div>
         </div>
@@ -682,6 +679,7 @@ function mchToForecastData(mch,lat,lon){
     hourly:{
       temperature_2m:mch.hourly.temp,
       precipitation:mch.hourly.precip,
+      rainProb:mch.hourly.prob||[],
       weathercode
     },
     daily:{
@@ -747,8 +745,12 @@ function revealDayCell(idx){
   const cell=row&&row.querySelector(`.day-cell[data-idx="${idx}"]`);
   if(!cell) return;
   const rr=row.getBoundingClientRect(), cr=cell.getBoundingClientRect();
-  if(cr.left<rr.left) row.scrollTo({left:row.scrollLeft+(cr.left-rr.left),behavior:'smooth'});
-  else if(cr.right>rr.right) row.scrollTo({left:row.scrollLeft+(cr.right-rr.right),behavior:'smooth'});
+  if(cr.left>=rr.left-1&&cr.right<=rr.right+1) return;   // schon ganz sichtbar
+  // Die Reihe rastet (scroll-snap) am Anfang einer Kachel ein. Deshalb auf die Kachel davor
+  // ausrichten: so liegt die aktive Kachel ganz im Bild und der Vortag bleibt als Kontext sichtbar.
+  const anchor=cell.previousElementSibling||cell;
+  const left=row.scrollLeft+(anchor.getBoundingClientRect().left-rr.left);
+  row.scrollTo({left:Math.max(0,left),behavior:'smooth'});
 }
 window.toggleDay=function(idx){
   // Kein Early-Return mehr bei activeDayIdx===idx: nach dem Durchswipen der Stunden
@@ -761,82 +763,59 @@ window.toggleDay=function(idx){
   document.getElementById('detailPanel').classList.add('open');
 };
 
-function buildHourlySvg(hTemps,hCodes,hPrecip,startOff,gKey){
+// Mobil: ein durchgehender Streifen über die ganze Prognose. 30 Einheiten pro Stunde, damit
+// 12 Stunden (= 360 Einheiten) genau eine Bildschirmbreite füllen. Temperatur- und Regen-
+// skala gelten für den ganzen Streifen, damit die Kurve beim Wischen nicht springt.
+const HOUR_UNITS=30;
+function buildHourlySvg(hTemps,hCodes,hPrecip,hProb,startOff,gKey){
   if(hTemps.length<2) return '';
   const isMob=window.innerWidth<=600;
   const n=hTemps.length;
-  // On mobile: one wide SVG spanning all pages; desktop: fixed width
-  const pages=isMob?Math.max(1,Math.ceil(n/12)):1;
-  const W=isMob?360*pages:800, pad=isMob?18:28;
-  const iconZone=isMob?64:36, curveH=isMob?88:78;
-  const barZone=isMob?49:59, timeZone=isMob?14:18;
+  const pad=isMob?34:28;
+  const W=isMob?(n-1)*HOUR_UNITS+pad*2:800;
+  const iconZone=isMob?64:36, curveH=isMob?120:78;
+  // Mit Regenwahrscheinlichkeit bekommt die Zeitzeile eine zweite Zeile («24 %» unter der Uhrzeit).
+  const hasProb=hProb.some(v=>v>=10);
+  const barZone=isMob?49:59, timeZone=(isMob?14:18)+(hasProb?(isMob?18:20):0);
   const iFnt=isMob?36:24, tFnt=isMob?24:19, lFnt=isMob?15.5:13, dotR=isMob?4:3;
   const labelFill=isMob?'#909aaf':'#8a94a8';
   const totalH=iconZone+curveH+barZone+timeZone;
   const minV=Math.min(...hTemps)-1, maxV=Math.max(...hTemps)+1, range=maxV-minV||1;
   const xOf=i=>pad+(i/(n-1))*(W-pad*2);
-  // Die Kurvenlinie selbst beginnt weiterhin bei pad (ganz am linken Rand). Die ERSTE
-  // Stunden-Markierung jeder Seite (i=0,12,24,…) bleibt UNVERÄNDERT bei xOf(i)+markerInset
-  // (bewusst identische Formel wie zuvor – dieser linke Rand ist bereits korrekt und darf
-  // nicht angefasst werden). Die LETZTE Markierung jeder Seite (lokal Stunde 9) rückt neu
-  // mit demselben Randabstand an die rechte Seitenkante; die zwei mittleren Markierungen
-  // (lokal 3 und 6) werden gleichmässig zwischen erster und letzter Position verteilt.
-  // Die Seitenkanten selbst werden über xOf() der jeweils angrenzenden Stunde bestimmt
-  // (nicht über eine angenommene Pixelbreite pro Seite) – dadurch bleiben Markierungen
-  // und Kurvenlinie immer konsistent zueinander, ohne dass etwas von der nächsten Seite
-  // vor dem Wischen sichtbar hereinragt.
-  const markerInset=isMob?14:0;
-  const markerXOf=i=>{
-    if(!isMob) return xOf(i);
-    const local=i%12;
-    if(local===0) return xOf(i)+markerInset;
-    const p=Math.floor(i/12);
-    const firstX=xOf(p*12)+markerInset;
-    // Die erste Markierung hat effektiv pad+markerInset (18+14=32 Einheiten) Abstand vom
-    // linken Rand (xOf(0)=pad, plus +markerInset). Die letzte Markierung braucht denselben
-    // Gesamtabstand vom rechten Rand ihrer Seite – nicht nur markerInset allein, sonst wirkt
-    // rechts deutlich enger als links. Die Seitengrenze ist die ECHTE, geometrische
-    // Seitenbreite (p+1)*360 (nicht xOf((p+1)*12), das ab Stunde 12 nach rechts wegdriftet
-    // und die Markierung über die vom Scroll-Container abgeschnittene Kante hinausschieben
-    // würde – genau das vom Nutzer gemeldete Durchschimmern der Folgeseite).
-    const pageRight=(p+1)*360;
-    const lastX=pageRight-(pad+markerInset);
-    if(local===9) return lastX;
-    return firstX+((local/3)/3)*(lastX-firstX);
-  };
   const curveBot=iconZone+curveH;
   const topPad=tFnt+4;
   const yOf=t=>curveBot-4-((t-minV)/range)*(curveH-12-topPad);
   const pts=hTemps.map((t,i)=>`${xOf(i).toFixed(1)},${yOf(t).toFixed(1)}`).join(' ');
-  // Da die 3 rechten Markierungen pro Seite jetzt seitlich von ihrer "wahren" Stunden-
-  // Position abweichen können, wird ihre Y-Position dort berechnet, wo die echte Kurve
-  // an dieser X-Koordinate tatsächlich verläuft (Interpolation zwischen den beiden
-  // umliegenden Datenpunkten) – der Punkt sitzt so immer sichtbar AUF der Linie, die
-  // angezeigte Zahl bleibt exakt der echte Stundenwert.
-  const yAtX=x=>{
-    const cx=Math.max(xOf(0),Math.min(xOf(n-1),x));
-    let j=0;
-    while(j<n-2&&xOf(j+1)<cx) j++;
-    const x0=xOf(j), x1=xOf(j+1), t=x1>x0?(cx-x0)/(x1-x0):0;
-    return yOf(hTemps[j]+(hTemps[j+1]-hTemps[j])*t);
-  };
 
-  // Time labels every 3h; mobile stops before last data point (no boundary dup), desktop shows end label
+  // Zeitbeschriftung alle 3 h; mobil bis zum letzten Datenpunkt, Desktop mit Endbeschriftung
   const labelMax=isMob?n-1:n;
   let timeLabels='';
   for(let i=0;i<=labelMax;i+=3){
     const xi=Math.min(i,n-1);
     const hr=String((startOff+i)%24).padStart(2,'0');
-    timeLabels+=`<text x="${markerXOf(xi).toFixed(1)}" y="${totalH-5}" font-family="'DM Mono',monospace" font-size="${lFnt}" fill="${labelFill}" text-anchor="middle">${hr}:00</text>`;
+    const probOn=hasProb&&hProb[xi]>=10;
+    const tY=totalH-5-(hasProb?(isMob?18:20):0);
+    timeLabels+=`<text x="${xOf(xi).toFixed(1)}" y="${tY}" font-family="'DM Mono',monospace" font-size="${lFnt}" fill="${labelFill}" text-anchor="middle">${hr}:00</text>`;
+    if(probOn) timeLabels+=`<text x="${xOf(xi).toFixed(1)}" y="${totalH-5}" font-family="'DM Mono',monospace" font-size="${lFnt-1.5}" fill="rgba(74,163,243,0.95)" text-anchor="middle">${Math.round(hProb[xi])}%</text>`;
   }
 
-  // Icons + temp marks every 3h across all data
+  // Feine gestrichelte Linie bei jedem Tageswechsel (nur im durchgehenden Streifen)
+  let dayLines='';
+  if(isMob){
+    for(let i=1;i<n;i++){
+      if((startOff+i)%24!==0) continue;
+      const x=xOf(i).toFixed(1);
+      dayLines+=`<line x1="${x}" y1="${iconZone-14}" x2="${x}" y2="${totalH-timeZone-2}" stroke="rgba(255,255,255,0.10)" stroke-width="1" stroke-dasharray="3 4"/>`;
+    }
+  }
+
+  // Icons + Temperaturmarken alle 3 h über den ganzen Streifen
   let icons='', tempMarks='';
   const tCol=t=>t>=30?'#e84040':t>=25?'#f3d44a':t>=10?'#4af3c8':t>=0?'#4ab4f3':'#a4d8f3';
   for(let i=0;i<n;i+=3){
     const hr=(startOff+i)%24;
-    icons+=`<text x="${markerXOf(i).toFixed(1)}" y="${iconZone-8}" font-family="serif" font-size="${iFnt}" text-anchor="middle">${wIcon(hCodes[i]??0,hr>=21||hr<6)}</text>`;
-    const x=markerXOf(i), y=yAtX(x), col=tCol(hTemps[i]);
+    const x=xOf(i), y=yOf(hTemps[i]), col=tCol(hTemps[i]);
+    icons+=`<text x="${x.toFixed(1)}" y="${iconZone-8}" font-family="serif" font-size="${iFnt}" text-anchor="middle">${wIcon(hCodes[i]??0,hr>=21||hr<6)}</text>`;
     const lbl=(hTemps[i]>=0?'+':'')+Math.round(hTemps[i])+'°';
     tempMarks+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${dotR}" fill="${col}" stroke="rgba(6,8,13,0.9)" stroke-width="1.5"/>`;
     tempMarks+=`<text x="${x.toFixed(1)}" y="${(y-dotR-4).toFixed(1)}" font-family="'Bebas Neue',sans-serif" font-size="${tFnt}" fill="${col}" text-anchor="middle">${lbl}</text>`;
@@ -855,12 +834,13 @@ function buildHourlySvg(hTemps,hCodes,hPrecip,startOff,gKey){
     bars+=`<rect x="${(xOf(i)-bWidth/2).toFixed(1)}" y="${(barBase-bh).toFixed(1)}" width="${bWidth.toFixed(1)}" height="${bh.toFixed(1)}" fill="rgba(74,163,243,0.75)" rx="1"/>`;
   });
 
-  const svgStyle=isMob?`width:${pages*100}%;height:auto;display:block`:`height:${totalH}px`;
+  const svgStyle=isMob?`width:${(W/360*100).toFixed(3)}%;height:auto;display:block`:`height:${totalH}px`;
   return `<svg class="detail-curve" style="${svgStyle}" viewBox="0 0 ${W} ${totalH}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
     <defs>
       <linearGradient id="${gId}" x1="0%" y1="0%" x2="100%" y2="0%">${gStops}</linearGradient>
       <linearGradient id="dfg${gKey}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4af3c8" stop-opacity=".10"/><stop offset="100%" stop-color="#4af3c8" stop-opacity="0"/></linearGradient>
     </defs>
+    ${dayLines}
     <polygon points="${pad},${curveBot} ${pts} ${W-pad},${curveBot}" fill="url(#dfg${gKey})"/>
     <polyline points="${pts}" fill="none" stroke="url(#${gId})" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     ${icons}${tempMarks}${bars}${timeLabels}
@@ -878,72 +858,62 @@ function buildDetailPanel(idx){
   const dayLabel=dayLabelFor(idx,date);
 
   const hStart=idx*24;
-  const now=new Date();
-  const startOff=idx===0?now.getHours():6;
+  const startOff=idx===0?new Date().getHours():6;
   const N=12;
   const isMob=window.innerWidth<=600;
   const totalDays=d.daily?.time?.length??1;
-  // Real calendar start of this panel's data, used to work out which day a swiped-to hourly page belongs to
-  const baseDate=new Date(date.getFullYear(),date.getMonth(),date.getDate(),startOff,0,0,0);
-  const panelDay=new Date(date.getFullYear(),date.getMonth(),date.getDate());
-
   const startLabel=String(startOff%24).padStart(2,'0')+':00';
+  const sunText=i=>`☀️ &nbsp;↑ ${d.daily?.sunrise?.[i]?.slice(11,16)??'—'} &nbsp;·&nbsp; ↓ ${d.daily?.sunset?.[i]?.slice(11,16)??'—'}`;
 
+  const allTemps=d.hourly?.temperature_2m??[];
   let svgContent='';
   if(isMob){
-    // Collect all data for up to 3 pages as one batch → single wide SVG, no gaps
-    const hTemps=d.hourly?.temperature_2m?.slice(hStart+startOff,hStart+startOff+N*3)??[];
-    const hCodes=d.hourly?.weathercode?.slice(hStart+startOff,hStart+startOff+N*3)??[];
-    const hPrecip=d.hourly?.precipitation?.slice(hStart+startOff,hStart+startOff+N*3)??[];
-    const validPages=Math.min(3,Math.max(1,Math.ceil(hTemps.length/N)));
-    if(hTemps.length>=2){
-      // First snap zone holds the wide SVG (overflow:visible so it spans all pages)
-      // Subsequent snap zones are empty divs that act as scroll snap anchors
-      let snapZones=`<div class="hourly-page" style="overflow:visible">${buildHourlySvg(hTemps,hCodes,hPrecip,startOff,idx)}</div>`;
-      for(let p=1;p<validPages;p++) snapZones+=`<div class="hourly-page"></div>`;
-      let dots='';
-      for(let p=0;p<validPages;p++) dots+=`<span class="hourly-dot${p===0?' active':''}"></span>`;
-      svgContent=`<div class="hourly-scroll-wrap" id="hscroll_${idx}">${snapZones}</div>${validPages>1?`<div class="hourly-dots">${dots}</div>`:''}`;
+    // Ein durchgehender Streifen von heute 00:00 bis zum Ende der Prognose; der gewählte Tag
+    // wird nur als Startposition angescrollt (vorher/nachher bleibt alles erreichbar).
+    if(allTemps.length>=2){
+      svgContent=`<div class="hourly-scroll-wrap" id="hscroll_${idx}">${buildHourlySvg(allTemps,d.hourly?.weathercode??[],d.hourly?.precipitation??[],d.hourly?.rainProb??[],0,idx)}</div>`;
     }
   } else {
-    const hTemps=d.hourly?.temperature_2m?.slice(hStart+startOff,hStart+startOff+N)??[];
+    const hTemps=allTemps.slice(hStart+startOff,hStart+startOff+N);
     const hCodes=d.hourly?.weathercode?.slice(hStart+startOff,hStart+startOff+N)??[];
     const hPrecip=d.hourly?.precipitation?.slice(hStart+startOff,hStart+startOff+N)??[];
-    if(hTemps.length>1) svgContent=buildHourlySvg(hTemps,hCodes,hPrecip,startOff,idx);
+    const hProb=d.hourly?.rainProb?.slice(hStart+startOff,hStart+startOff+N)??[];
+    if(hTemps.length>1) svgContent=buildHourlySvg(hTemps,hCodes,hPrecip,hProb,startOff,idx);
   }
-
-  const sunrise=d.daily?.sunrise?.[idx]?.slice(11,16)??'—';
-  const sunset=d.daily?.sunset?.[idx]?.slice(11,16)??'—';
 
   panel.innerHTML=`<div class="detail-inner">
     <div class="detail-title" id="detailTitle">${dayLabel} · ${startLabel}</div>
     ${svgContent}
-    <div class="detail-sun-left">☀️ &nbsp;↑ ${sunrise} &nbsp;·&nbsp; ↓ ${sunset}</div>
+    <div class="detail-sun-left" id="detailSun">${sunText(idx)}</div>
   </div>`;
 
   if(isMob){
     const wrap=document.getElementById('hscroll_'+idx);
+    if(!wrap) return;
     const titleEl=document.getElementById('detailTitle');
-    let lastRevealedIdx=idx;
-    if(wrap) wrap.addEventListener('scroll',function(){
-      const pg=Math.round(this.scrollLeft/this.offsetWidth);
-      this.closest('.detail-inner').querySelectorAll('.hourly-dot').forEach((dot,i)=>dot.classList.toggle('active',i===pg));
-
-      // Datumsgrenze: sobald die Seite in den nächsten Kalendertag hineinreicht,
-      // muss der Tag-Indikator in der Tagesreihe (Sektion 2) nachgeführt werden.
-      const pageDate=new Date(baseDate.getTime()+pg*N*3600*1000);
-      const pageDay=new Date(pageDate.getFullYear(),pageDate.getMonth(),pageDate.getDate());
-      const dayDiff=Math.round((pageDay-panelDay)/86400000);
-      const targetIdx=Math.min(totalDays-1,Math.max(0,idx+dayDiff));
-      // Nur die visuelle Markierung folgt der Datumsgrenze – activeDayIdx bleibt der tatsächlich
-      // aufgebaute Tag, damit ein Klick auf den nun aktiven Tag-Cell das Panel trotzdem frisch neu aufbaut.
-      document.querySelectorAll('.day-cell').forEach(c=>c.classList.toggle('active',parseInt(c.dataset.idx)===targetIdx));
-      if(targetIdx!==lastRevealedIdx){lastRevealedIdx=targetIdx;revealDayCell(targetIdx);}
+    const sunEl=document.getElementById('detailSun');
+    const n=allTemps.length;
+    const unit=()=>wrap.clientWidth/360;   // Pixel pro SVG-Einheit
+    const startIdx=Math.min(hStart+startOff,n-1);
+    const scrollToStart=()=>{wrap.scrollLeft=startIdx*HOUR_UNITS*unit();};
+    scrollToStart();
+    requestAnimationFrame(scrollToStart);
+    let lastDay=-1;
+    // Tag und Uhrzeit am linken Rand bestimmen Titel, Sonnenzeiten und den Indikator in der Tagesreihe.
+    wrap.addEventListener('scroll',function(){
+      const u=unit();
+      if(!u) return;
+      const i=Math.max(0,Math.min(n-1,Math.round(wrap.scrollLeft/(u*HOUR_UNITS))));
+      const dayIdx=Math.min(totalDays-1,Math.floor(i/24));
+      if(dayIdx!==lastDay){
+        lastDay=dayIdx;
+        document.querySelectorAll('.day-cell').forEach(c=>c.classList.toggle('active',parseInt(c.dataset.idx)===dayIdx));
+        revealDayCell(dayIdx);
+        if(sunEl) sunEl.innerHTML=sunText(dayIdx);
+      }
       if(titleEl){
-        const targetDateStr=d.daily?.time?.[targetIdx]??dateStr;
-        const targetDate=new Date(targetDateStr+'T12:00:00');
-        const pageStartLabel=String(pageDate.getHours()).padStart(2,'0')+':00';
-        titleEl.textContent=`${dayLabelFor(targetIdx,targetDate)} · ${pageStartLabel}`;
+        const tDate=new Date((d.daily?.time?.[dayIdx]??dateStr)+'T12:00:00');
+        titleEl.textContent=`${dayLabelFor(dayIdx,tDate)} · ${String(i%24).padStart(2,'0')}:00`;
       }
     },{passive:true});
   }
@@ -1042,7 +1012,7 @@ function rebaseMch(mch){
   return {
     id:mch.id, run:mch.run,
     start:new Date(Date.parse(mch.start)+off*86400000).toISOString(),
-    hourly:{temp:cut(h.temp,off*24),precip:cut(h.precip,off*24),wind:cut(h.wind,off*24),gust:cut(h.gust,off*24)},
+    hourly:{temp:cut(h.temp,off*24),precip:cut(h.precip,off*24),wind:cut(h.wind,off*24),gust:cut(h.gust,off*24),prob:cut(h.prob,off*24)},
     picto3h:cut(mch.picto3h,off*8),
     daily:{dates:cut(mch.daily.dates,off),tmin:cut(mch.daily.tmin,off),tmax:cut(mch.daily.tmax,off),picto:cut(mch.daily.picto,off)}
   };
@@ -1620,26 +1590,86 @@ function pickSuggestion(label,dd){
   if(g) setLocalByCoords(g.lat,g.lon,label);
 }
 
-async function fetchGeoSuggestions(query,dd){
+// ── ORTSLISTE (MeteoSchweiz; liegt als places.js fest im App-Bundle, daher sofort und offline) ──
+let placeIndexCache=null;
+function normPlace(s){
+  return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss')
+    .replace(/ae|oe|ue/g,m=>m[0])            // «Zuerich» findet «Zürich»
+    .replace(/[.,()\/\-]+/g,' ').replace(/\s+/g,' ').trim();   // «St Gallen» findet «St. Gallen»
+}
+// Schlüssel zum Zusammenführen derselben Orte aus verschiedenen Quellen («Brugg AG» = «Brugg»)
+function placeKey(s){return normPlace(s).replace(/ [a-z]{2}$/,'');}
+function placeIndex(){
+  if(!placeIndexCache){
+    placeIndexCache=(window.MCH_PLACES||[]).map(p=>({name:p[0],lat:p[1],lon:p[2],w:p[3],t:p[4],n:' '+normPlace(p[0])}));
+  }
+  return placeIndexCache;
+}
+// Treffer am Namens- oder Wortanfang. Reihenfolge: Namensanfang vor Wortanfang, Ortschaften vor
+// Bergen/Hütten, grössere Orte (viele Postleitzahl-Gebiete) zuerst, dann kürzere Namen.
+function searchPlaces(query,limit){
+  const q=normPlace(query);
+  if(!q) return [];
+  const needle=' '+q;
+  const hits=[];
+  for(const p of placeIndex()){
+    if(p.n.startsWith(needle)) hits.push({p,r:0});
+    else if(p.n.includes(needle)) hits.push({p,r:1});
+  }
+  // Stationsvarianten wie «Zürich / Kloten» erst nach den eigentlichen Orten
+  const sub=p=>p.name.includes(' / ')?1:0;
+  hits.sort((a,b)=>a.r-b.r||a.p.t-b.p.t||b.p.w-a.p.w||sub(a.p)-sub(b.p)||a.p.name.length-b.p.name.length||a.p.name.localeCompare(b.p.name,'de'));
+  return hits.slice(0,limit).map(h=>h.p);
+}
+
+let suggestToken=0;   // verwirft Antworten zu einer Eingabe, die inzwischen überholt ist
+function showSuggestions(dd,items){
+  const labels=[];
+  items.forEach(it=>{geocodedLocations[it.label]={lat:it.lat,lon:it.lon};labels.push(it.label);});
+  renderSuggestions(dd,labels);
+}
+
+// Die Vorschläge kommen sofort aus der lokalen Ortsliste. Zusätzlich fragt die App (verzögert)
+// die Ortssuche von Apple: deren Reihenfolge dient als Hinweis, welche Orte wichtiger sind, und
+// sie liefert Treffer, die nicht in der Liste stehen. Bewusst PRO ANFRAGE ausgewertet – früher
+// wurden bereits angezeigte Namen später als «Duplikat» unterdrückt, dadurch verschwanden
+// Vorschläge beim Weitertippen und nach dem Löschen.
+async function fetchGeoSuggestions(query,dd,pool,token){
   try{
-    const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=ch&limit=6&accept-language=de&addressdetails=1`);
+    const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&countrycodes=ch&limit=8&accept-language=de&addressdetails=1`);
     const data=await res.json();
-    const labels=[];
+    if(token!==suggestToken) return;
+    const apple=[], seenApple=new Set();
     data.forEach(r=>{
       const {label}=formatAddress(r.address||{});
-      const finalLabel=label||r.display_name;
-      if(!finalLabel||geocodedLocations[finalLabel]) return; // gleicher Strassenname mehrfach (verschiedene PLZ-Abschnitte) → nur einmal anzeigen
-      geocodedLocations[finalLabel]={lat:parseFloat(r.lat),lon:parseFloat(r.lon)};
-      labels.push(finalLabel);
+      const text=label||r.display_name;
+      const lat=parseFloat(r.lat), lon=parseFloat(r.lon);
+      if(!text||isNaN(lat)||isNaN(lon)) return;
+      const k=placeKey(text);
+      if(seenApple.has(k)) return;
+      seenApple.add(k);
+      apple.push({label:text,lat,lon,k});
     });
-    renderSuggestions(dd,labels);
+    const items=[], used=new Set();
+    const byKey=new Map(pool.map(p=>[placeKey(p.name),p]));
+    apple.forEach(a=>{const p=byKey.get(a.k);if(p&&!used.has(a.k)){used.add(a.k);items.push({label:p.name,lat:p.lat,lon:p.lon});}});
+    pool.forEach(p=>{const k=placeKey(p.name);if(!used.has(k)){used.add(k);items.push({label:p.name,lat:p.lat,lon:p.lon});}});
+    if(items.length<3) apple.forEach(a=>{if(!used.has(a.k)){used.add(a.k);items.push({label:a.label,lat:a.lat,lon:a.lon});}});
+    showSuggestions(dd,items.slice(0,6));
   }catch(e){}
 }
 
 async function searchLocation(val,dd){
   if(!val) return;
   if(geocodedLocations[val]){pickSuggestion(val,dd);return;}
-  // freier Text ohne Auswahl aus dem Dropdown (Enter gedrückt) → direkt geokodieren
+  // Enter ohne Auswahl: bester Treffer der Ortsliste, sonst frei geokodieren
+  const lp=searchPlaces(val,1)[0];
+  if(lp){
+    geocodedLocations[lp.name]={lat:lp.lat,lon:lp.lon};
+    setLocalByCoords(lp.lat,lp.lon,lp.name);
+    if(dd) closeSuggestDropdown(dd);
+    return;
+  }
   try{
     const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&countrycodes=ch&limit=1&accept-language=de&addressdetails=1`);
     const data=await res.json();
@@ -1658,8 +1688,11 @@ function wireSearchInput(el,dd){
   el.addEventListener('input',function(){
     clearTimeout(geoDebounce);
     const q=this.value.trim();
-    if(q.length>=2) geoDebounce=setTimeout(()=>fetchGeoSuggestions(q,dd),350);
-    else closeSuggestDropdown(dd);
+    const token=++suggestToken;
+    if(q.length<2){closeSuggestDropdown(dd);return;}
+    const pool=searchPlaces(q,60);
+    showSuggestions(dd,pool.slice(0,6).map(p=>({label:p.name,lat:p.lat,lon:p.lon})));   // sofort, ohne Netz
+    geoDebounce=setTimeout(()=>fetchGeoSuggestions(q,dd,pool,token),350);
   });
   el.addEventListener('keydown',function(e){
     const items=[...dd.querySelectorAll('.suggest-item')];

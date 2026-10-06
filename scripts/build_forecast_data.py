@@ -33,6 +33,7 @@ HOURLY_PARAMS = {
     "rre150h0": "precip",
     "fu3010h0": "wind",  # Windgeschwindigkeit, Stundenmittel, km/h
     "fu3010h1": "gust",  # Böenspitze, Stundenmaximum, km/h
+    "rp0003i0": "prob",  # Niederschlagswahrscheinlichkeit (3-Std.-Fenster), %
 }
 PICTO3H_PARAM = "jww003i0"
 DAILY_PARAMS = {"tre200pn": "tmin", "tre200px": "tmax"}
@@ -182,6 +183,7 @@ def main():
         precip_series = hourly_data["precip"].get(key, {})
         wind_series = hourly_data["wind"].get(key, {})
         gust_series = hourly_data["gust"].get(key, {})
+        prob_series = hourly_data["prob"].get(key, {})
         picto3h_series = picto3h_data.get(key, {})
         tmin_series = daily_data["tmin"].get(key, {})
         tmax_series = daily_data["tmax"].get(key, {})
@@ -203,6 +205,7 @@ def main():
                 "precip": trim_trailing_none([round_or_none(precip_series.get(t), 2) for t in hourly_targets]),
                 "wind": trim_trailing_none([round_or_none(wind_series.get(t), 0) for t in hourly_targets]),
                 "gust": trim_trailing_none([round_or_none(gust_series.get(t), 0) for t in hourly_targets]),
+                "prob": trim_trailing_none([round_or_none(prob_series.get(t), 0) for t in hourly_targets]),
             },
             "picto3h": trim_trailing_none(
                 [int(v) if (v := picto3h_series.get(t)) is not None else None for t in picto3h_targets]
