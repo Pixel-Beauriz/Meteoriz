@@ -249,6 +249,8 @@ body.view-stations .stations-view{display:block}
      übernimmt die Seite selbst den Sicherheitsabstand – eine einzige Farbquelle statt
      zweier Ebenen, die exakt zusammenpassen müssen. */
   .hero{padding:0;position:relative;overflow:hidden;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  /* Geschützte Zone hinter Uhrzeit/Dynamic Island: Inhalt scrollt nie darunter durch. */
+  body::after{content:'';position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top);background:var(--bg);z-index:1000;pointer-events:none}
   .hero-left{padding:0;animation:none;display:flex;flex-direction:column;flex:1}
   .hero-eyebrow,.hero-title{display:none}
   .local-card-geo{display:none}
