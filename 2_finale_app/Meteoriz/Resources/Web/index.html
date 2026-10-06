@@ -106,6 +106,15 @@ body.view-stations .stations-view{display:block}
 .detail-sun{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted2);letter-spacing:2px;margin-top:6px;display:flex;gap:16px;justify-content:center}
 
 .forecast-loading{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;padding:12px 0;text-align:center}
+.stale-note{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px;padding:10px 12px;border:1px solid rgba(243,178,74,.45);background:rgba(243,178,74,.06)}
+.stale-note[hidden]{display:none}
+.stale-note-text{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--accent2)}
+.stale-note-btn{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);background:transparent;border:0;padding:8px 0;cursor:pointer;min-height:36px}
+.load-error{padding:28px 0 8px;text-align:center}
+.load-error-title{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;color:var(--text);line-height:1.1}
+.load-error-text{font-family:'DM Mono',monospace;font-size:11px;line-height:1.6;color:var(--muted);margin:10px auto 22px;max-width:300px}
+.load-error-btn{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);background:transparent;border:1px solid var(--accent);padding:14px 22px;min-height:44px;cursor:pointer;transition:background .2s}
+.load-error-btn:active{background:rgba(74,243,200,.12)}
 .forecast-credit{font-family:'DM Mono',monospace;font-size:9.6px;letter-spacing:1px;color:var(--muted);margin-top:10px;text-align:left}
 
 /* SVG hero – positioned absolute top-right of hero section */
@@ -371,6 +380,7 @@ body.view-stations .stations-view{display:block}
           <div class="local-detail-sun" id="sunInfo"></div>
         </div>
       </div>
+      <div class="stale-note" id="staleNote" hidden></div>
       <div class="forecast-wrap" id="forecastWrap">
         <div class="forecast-loading">Prognose lädt…</div>
       </div>
@@ -694,7 +704,7 @@ async function loadForecast(lat,lon,preloaded){
     renderForecast(wrap, forecastData, lat, lon);
     notifyNativeSuccess();
   } catch(e){
-    wrap.innerHTML='<div class="forecast-loading">Prognose nicht verfügbar</div>';
+    showLoadError();
   }
 }
 
@@ -989,6 +999,125 @@ function renderSunInfo(lat,lon){
 // Meldet der nativen App einen erfolgreichen Datenload, damit ein zeitgleich
 // aufgetretener, aber inzwischen von selbst gelöster JS-Fehler (z.B. abgebrochener
 // Request bei schnellem Pull-to-Refresh) nicht als falscher Fehler-Banner erscheint.
+// Fehlerzustand statt endlosem «Prognose lädt…»: verständlicher Text + Knopf zum erneuten Laden.
+// navigator.onLine unterscheidet «kein Netz» von «Dienst gerade nicht erreichbar».
+function showLoadError(){
+  const wrap=document.getElementById('forecastWrap');
+  if(!wrap) return;
+  const offline=navigator.onLine===false;
+  const title=offline?'Keine Internetverbindung':'Wetterdaten nicht erreichbar';
+  const text=offline?'Bitte WLAN oder Mobilfunk prüfen und erneut versuchen.':'Der Dienst antwortet gerade nicht. Bitte in einem Moment erneut versuchen.';
+  wrap.innerHTML=`<div class="load-error">
+    <div class="load-error-title">${title}</div>
+    <div class="load-error-text">${text}</div>
+    <button type="button" class="load-error-btn" onclick="retryLoad()">Erneut versuchen</button>
+  </div>`;
+}
+// ── LETZTER STAND (Offline-Anzeige) ──
+// Nach jedem erfolgreichen Laden wird die Standortanzeige samt Prognosedatei gespeichert.
+// Schlägt ein späteres Laden fehl (kein Netz, Kaltstart oder Refresh), zeigt die App diesen
+// letzten Stand mit Hinweis statt einer leeren Seite. Nur wenn nichts Gespeichertes da ist,
+// erscheint stattdessen die Fehlermeldung mit «Erneut versuchen».
+const SNAP_KEY='meteoriz.snapshot.v1';
+const SNAP_MAX_AGE=48*3600*1000;
+function todayZurich(){return new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Zurich'});}
+function saveSnapshot(s){try{localStorage.setItem(SNAP_KEY,JSON.stringify(s));}catch(e){}}
+function loadSnapshot(){
+  try{
+    const s=JSON.parse(localStorage.getItem(SNAP_KEY)||'null');
+    if(!s||!s.mch||!s.ui||Date.now()-s.savedAt>SNAP_MAX_AGE) return null;
+    return s;
+  }catch(e){return null;}
+}
+// Die Anzeige geht davon aus, dass Index 0 der Prognose «heute» ist. Eine ältere Datei wird
+// deshalb um die vergangenen Tage gekürzt; bleibt weniger als 2 Tage übrig, ist sie unbrauchbar.
+function rebaseMch(mch){
+  const dates=mch.daily?.dates||[];
+  if(!dates.length) return null;
+  const off=Math.max(0,Math.round((Date.parse(todayZurich()+'T00:00:00Z')-Date.parse(dates[0]+'T00:00:00Z'))/86400000));
+  if(off>=dates.length-1) return null;
+  if(off===0) return mch;
+  const cut=(a,n)=>Array.isArray(a)?a.slice(n):a;
+  const h=mch.hourly||{};
+  return {
+    id:mch.id, run:mch.run,
+    start:new Date(Date.parse(mch.start)+off*86400000).toISOString(),
+    hourly:{temp:cut(h.temp,off*24),precip:cut(h.precip,off*24),wind:cut(h.wind,off*24),gust:cut(h.gust,off*24)},
+    picto3h:cut(mch.picto3h,off*8),
+    daily:{dates:cut(mch.daily.dates,off),tmin:cut(mch.daily.tmin,off),tmax:cut(mch.daily.tmax,off),picto:cut(mch.daily.picto,off)}
+  };
+}
+function fmtStand(ts){
+  const d=new Date(ts);
+  const hm=d.toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Zurich'});
+  if(d.toLocaleDateString('sv-SE',{timeZone:'Europe/Zurich'})===todayZurich()) return hm;
+  return d.toLocaleDateString('de-CH',{weekday:'short',timeZone:'Europe/Zurich'})+' '+hm;
+}
+function showStaleNote(ts){
+  const el=document.getElementById('staleNote');
+  if(!el) return;
+  const prefix=navigator.onLine===false?'Offline':'Keine aktuellen Daten';
+  el.innerHTML=`<span class="stale-note-text">${prefix} – Stand ${fmtStand(ts)}</span><button type="button" class="stale-note-btn" onclick="retryLoad()">Erneut versuchen</button>`;
+  el.hidden=false;
+}
+function hideStaleNote(){
+  const el=document.getElementById('staleNote');
+  if(el){el.hidden=true;el.innerHTML='';}
+}
+function offlineViewShown(){
+  const el=document.getElementById('staleNote');
+  return (el&&!el.hidden)||!!document.querySelector('#forecastWrap .load-error');
+}
+function snapshotCurrent(lat,lon,knownLabel,temp,virt,mch){
+  try{
+    const t=id=>document.getElementById(id).textContent;
+    saveSnapshot({
+      savedAt:Date.now(),lat,lon,label:knownLabel||null,temp,mch,
+      virt:{lat,lon,temp,wind:virt.wind,rain:virt.rain,humidity:virt.humidity,gust:virt.gust,alt:virt.alt,weathercode:virt.weathercode},
+      ui:{label:t('localLabel'),name:t('localName'),meta:t('localMeta'),humidity:t('localHumidity'),wind:t('localWind'),gust:t('localGust'),rain:t('localRain'),geo:t('geoStatusText')}
+    });
+  }catch(e){}
+}
+// Zeigt den zuletzt gespeicherten Stand mit Hinweis. Gibt false zurück, wenn es nichts
+// Passendes gibt (dann erscheint die Fehlermeldung). Wurde gezielt ein Ort gesucht, wird nur
+// der gespeicherte Stand desselben Orts gezeigt – nicht ein anderer.
+function restoreSnapshot(expectedLabel){
+  try{
+    const s=loadSnapshot();
+    if(!s) return false;
+    if(expectedLabel&&s.label!==expectedLabel) return false;
+    const mch=rebaseMch(s.mch);
+    if(!mch) return false;
+    const u=s.ui;
+    const set=(id,v)=>{document.getElementById(id).textContent=v;};
+    set('localLabel',u.label);set('localName',u.name);set('localMeta',u.meta);
+    set('localHumidity',u.humidity);set('localWind',u.wind);set('localGust',u.gust);set('localRain',u.rain);
+    setGeoText(u.geo);
+    setSearchPlaceholder(u.name);
+    animateTemp(document.getElementById('localTemp'),s.temp);
+    activeCoords={lat:s.lat,lon:s.lon,label:s.label};
+    renderSunInfo(s.lat,s.lon);
+    const virt=Object.assign({},s.virt,{is_day:!isNight(s.lat,s.lon)});
+    localStation=virt;
+    drawWeather(virt);
+    forecastData=mchToForecastData(mch,s.lat,s.lon);
+    renderForecast(document.getElementById('forecastWrap'),forecastData,s.lat,s.lon);
+    showStaleNote(s.savedAt);
+    return true;
+  }catch(e){
+    console.error('Gespeicherter Stand nicht darstellbar:',e);
+    return false;
+  }
+}
+window.addEventListener('online',()=>{if(offlineViewShown()) window.retryLoad();});
+
+window.retryLoad=function(){
+  hideStaleNote();
+  const wrap=document.getElementById('forecastWrap');
+  if(wrap) wrap.innerHTML='<div class="forecast-loading">Prognose lädt…</div>';
+  // Ohne Stationsliste startet die Standortabfrage erst nach deren erfolgreichem Laden.
+  if(!dataLoaded) loadMeteoSchweizData(); else requestGeo();
+};
 function notifyNativeSuccess(){
   try{
     window.webkit?.messageHandlers?.diagBridge?.postMessage({type:'success'});
@@ -1009,6 +1138,7 @@ window.switchView=switchView;
 
 // ── LOCAL CARD ──
 function setLocal(s){
+  hideStaleNote();
   localStation=s;
   document.getElementById('localLabel').textContent='Wetterstation';
   document.getElementById('localName').textContent=s.name;
@@ -1027,6 +1157,7 @@ function setLocal(s){
 }
 function setFallback(msg){
   if(!stations.length) return;
+  hideStaleNote();
   const h=stations.reduce((a,b)=>b.temp>a.temp?b:a);
   document.getElementById('localLabel').textContent='Kein Standort – höchste Temperatur heute';
   document.getElementById('localName').textContent=h.name;
@@ -1331,7 +1462,7 @@ async function loadMeteoSchweizData(){
       const kanton=(m['station_canton']||'CH').trim();
       newStations.push({id,name:(m['station_name']||id).trim(),kanton,kantonFull:KANTON_NAMES[kanton]||kanton,temp,humidity:isNaN(humidity)?50:Math.round(humidity),hasHum:!isNaN(humidity),wind:windKmh,gust:gustKmh,rain:isNaN(rain)?0:+rain.toFixed(1),pressure,alt:isNaN(alt)?0:Math.round(alt),lat,lon});
     });
-    if(!newStations.length) return;
+    if(!newStations.length){ if(!dataLoaded&&!offlineViewShown()&&!restoreSnapshot()) showLoadError(); return; }
     stations.length=0;
     newStations.forEach(s=>stations.push(s));
     notifyNativeSuccess();
@@ -1353,7 +1484,7 @@ async function loadMeteoSchweizData(){
       }
       renderModules();
     }
-  }catch(e){console.error('MeteoSchweiz Datenfehler:',e);}
+  }catch(e){console.error('MeteoSchweiz Datenfehler:',e);if(!dataLoaded&&!offlineViewShown()&&!restoreSnapshot()) showLoadError();}
 }
 
 // ── ADDRESS FORMATTING (Strasse/Nr, Stadt) ──
@@ -1408,8 +1539,13 @@ async function setLocalByCoords(lat,lon,knownLabel){
     loadForecast(lat,lon,loaded);
     renderModules();
     notifyNativeSuccess();
+    hideStaleNote();
+    snapshotCurrent(lat,lon,knownLabel,temp,virt,loaded.mch);
   }catch(e){
-    setGeoText('Wetterdaten nicht verfügbar');
+    if(!restoreSnapshot(knownLabel)){
+      setGeoText('Wetterdaten nicht verfügbar');
+      showLoadError();
+    }
   }
 }
 
@@ -1419,6 +1555,7 @@ const GEO_ERROR_TEXT={1:'Standort gesperrt – Einstellungen prüfen',2:'Standor
 // ermittelt wird – sonst bliebe der zuletzt angezeigte Ort sichtbar, während im
 // Hintergrund schon ein neuer Standort/Wetterdaten geladen werden.
 function resetLocalDisplay(){
+  hideStaleNote();
   document.getElementById('localLabel').textContent='Standort wird ermittelt…';
   document.getElementById('localName').textContent='–';
   document.getElementById('localMeta').textContent='–';
