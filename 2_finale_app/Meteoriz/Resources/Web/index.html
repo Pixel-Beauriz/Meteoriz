@@ -799,16 +799,6 @@ function buildHourlySvg(hTemps,hCodes,hPrecip,hProb,startOff,gKey){
     if(probOn) timeLabels+=`<text x="${xOf(xi).toFixed(1)}" y="${totalH-5}" font-family="'DM Mono',monospace" font-size="${lFnt-1.5}" fill="rgba(74,163,243,0.95)" text-anchor="middle">${Math.round(hProb[xi])}%</text>`;
   }
 
-  // Feine gestrichelte Linie bei jedem Tageswechsel (nur im durchgehenden Streifen)
-  let dayLines='';
-  if(isMob){
-    for(let i=1;i<n;i++){
-      if((startOff+i)%24!==0) continue;
-      const x=xOf(i).toFixed(1);
-      dayLines+=`<line x1="${x}" y1="${iconZone-14}" x2="${x}" y2="${totalH-timeZone-2}" stroke="rgba(255,255,255,0.10)" stroke-width="1" stroke-dasharray="3 4"/>`;
-    }
-  }
-
   // Icons + Temperaturmarken alle 3 h über den ganzen Streifen
   let icons='', tempMarks='';
   const tCol=t=>t>=30?'#e84040':t>=25?'#f3d44a':t>=10?'#4af3c8':t>=0?'#4ab4f3':'#a4d8f3';
@@ -840,7 +830,6 @@ function buildHourlySvg(hTemps,hCodes,hPrecip,hProb,startOff,gKey){
       <linearGradient id="${gId}" x1="0%" y1="0%" x2="100%" y2="0%">${gStops}</linearGradient>
       <linearGradient id="dfg${gKey}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4af3c8" stop-opacity=".10"/><stop offset="100%" stop-color="#4af3c8" stop-opacity="0"/></linearGradient>
     </defs>
-    ${dayLines}
     <polygon points="${pad},${curveBot} ${pts} ${W-pad},${curveBot}" fill="url(#dfg${gKey})"/>
     <polyline points="${pts}" fill="none" stroke="url(#${gId})" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     ${icons}${tempMarks}${bars}${timeLabels}
