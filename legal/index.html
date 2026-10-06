@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Meteoriz – Datenschutz &amp; Impressum</title>
+<meta name="description" content="Datenschutzerklärung, Impressum und Support für die iPhone-App Meteoriz.">
+<style>
+  :root{
+    --bg1:#e9eefb; --bg2:#f6e9f7; --bg3:#e3f4f6;
+    --orb1:#7aa7ff; --orb2:#ff9ccf; --orb3:#6fe0d0;
+    --text:#1d1d1f; --text2:#515154; --text3:#6e6e73;
+    --glass:rgba(255,255,255,.55); --glass-strong:rgba(255,255,255,.72);
+    --stroke:rgba(255,255,255,.75); --stroke-soft:rgba(0,0,0,.06);
+    --shadow:0 10px 40px rgba(40,60,120,.12), 0 1px 0 rgba(255,255,255,.6) inset;
+    --accent:#0071e3; --accent-soft:rgba(0,113,227,.12);
+    --todo-bg:rgba(255,204,0,.28); --todo-text:#6b4e00;
+    --radius:26px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg1:#0b0d14; --bg2:#120d1c; --bg3:#07141a;
+      --orb1:#3a63d8; --orb2:#a23b86; --orb3:#1f8f87;
+      --text:#f5f5f7; --text2:#c7c7cc; --text3:#98989d;
+      --glass:rgba(40,42,54,.45); --glass-strong:rgba(48,50,64,.62);
+      --stroke:rgba(255,255,255,.14); --stroke-soft:rgba(255,255,255,.08);
+      --shadow:0 12px 44px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.08) inset;
+      --accent:#2997ff; --accent-soft:rgba(41,151,255,.18);
+      --todo-bg:rgba(255,214,10,.22); --todo-text:#ffd60a;
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    margin:0; color:var(--text); min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size:17px; line-height:1.55; letter-spacing:-.011em;
+    background:linear-gradient(135deg,var(--bg1),var(--bg2) 55%,var(--bg3)) fixed;
+    -webkit-font-smoothing:antialiased;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  /* weiche Farbflächen hinter dem Glas */
+  .orbs{position:fixed;inset:0;overflow:hidden;z-index:-1;pointer-events:none}
+  .orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55}
+  .orb.a{width:46vmax;height:46vmax;left:-14vmax;top:-16vmax;background:var(--orb1)}
+  .orb.b{width:38vmax;height:38vmax;right:-12vmax;top:22vh;background:var(--orb2);opacity:.42}
+  .orb.c{width:42vmax;height:42vmax;left:12vw;bottom:-22vmax;background:var(--orb3);opacity:.45}
+
+  .glass{
+    background:var(--glass);
+    -webkit-backdrop-filter:blur(28px) saturate(180%);
+    backdrop-filter:blur(28px) saturate(180%);
+    border:1px solid var(--stroke);
+    box-shadow:var(--shadow);
+    border-radius:var(--radius);
+  }
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    .glass{background:var(--glass-strong)}
+  }
+  @media (prefers-reduced-transparency:reduce){
+    .glass{background:var(--glass-strong);-webkit-backdrop-filter:none;backdrop-filter:none}
+    .orb{display:none}
+  }
+
+  /* Navigation */
+  nav{
+    position:sticky; top:max(12px,env(safe-area-inset-top)); z-index:10;
+    display:flex; gap:4px; width:max-content; max-width:calc(100% - 32px);
+    margin:16px auto 0; padding:5px; border-radius:999px; overflow-x:auto;
+  }
+  nav a{
+    color:var(--text2); text-decoration:none; font-size:14px; font-weight:500;
+    padding:8px 16px; border-radius:999px; white-space:nowrap; transition:background .2s,color .2s;
+  }
+  nav a:hover{color:var(--text)}
+  nav a.active{background:var(--accent-soft);color:var(--accent)}
+
+  main{max-width:760px;margin:0 auto;padding:0 16px 56px}
+
+  header.hero{text-align:center;padding:56px 8px 40px}
+  .app-icon{
+    width:88px;height:88px;margin:0 auto 22px;border-radius:22%;
+    background:linear-gradient(160deg,#5aa9ff,#2e5bff 55%,#7a3cff);
+    display:grid;place-items:center;
+    box-shadow:0 14px 34px rgba(46,91,255,.35),0 1px 0 rgba(255,255,255,.5) inset;
+  }
+  .app-icon svg{width:50px;height:50px}
+  h1{font-size:clamp(34px,7vw,52px);line-height:1.06;letter-spacing:-.03em;font-weight:700;margin:0 0 12px}
+  .lead{font-size:clamp(17px,2.6vw,21px);color:var(--text2);margin:0 auto;max-width:34em}
+
+  section{margin-top:28px;scroll-margin-top:84px}
+  .card{padding:28px 28px 8px}
+  .card+.card{margin-top:16px}
+  h2{font-size:clamp(26px,4.4vw,32px);letter-spacing:-.025em;margin:0 0 4px;font-weight:700}
+  .eyebrow{font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin:0 0 6px}
+  h3{font-size:19px;letter-spacing:-.015em;margin:26px 0 6px;font-weight:600}
+  p{margin:0 0 14px;color:var(--text2)}
+  ul{margin:0 0 14px;padding-left:1.2em;color:var(--text2)}
+  li{margin:0 0 6px}
+  li::marker{color:var(--text3)}
+  a{color:var(--accent);text-underline-offset:3px}
+  strong{color:var(--text);font-weight:600}
+  .meta{font-size:14px;color:var(--text3)}
+
+  /* Kurzfassung als Kacheln */
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:22px 0 22px}
+  .tile{
+    padding:16px 16px 14px;border-radius:20px;
+    background:var(--glass-strong);border:1px solid var(--stroke-soft);
+  }
+  .tile b{display:block;font-size:15px;color:var(--text);margin-bottom:4px;font-weight:600}
+  .tile span{font-size:14px;color:var(--text2);line-height:1.45}
+  .tile .ic{font-size:22px;display:block;margin-bottom:8px}
+
+  dl{margin:0 0 20px}
+  dt{font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:14px}
+  dd{margin:2px 0 0;color:var(--text);font-size:17px}
+
+  .todo{background:var(--todo-bg);color:var(--todo-text);padding:1px 7px;border-radius:7px;font-weight:600;font-size:.95em}
+
+  footer{text-align:center;color:var(--text3);font-size:13px;padding:34px 0 0}
+  footer p{color:var(--text3);margin:0 0 8px}
+
+  @media (max-width:420px){
+    nav a{padding:8px 11px;font-size:13.5px}
+  }
+  @media (max-width:520px){
+    body{font-size:16px}
+    .card{padding:22px 20px 4px}
+    header.hero{padding-top:40px}
+  }
+</style>
+</head>
+<body>
+<div class="orbs" aria-hidden="true"><div class="orb a"></div><div class="orb b"></div><div class="orb c"></div></div>
+
+<nav class="glass" aria-label="Abschnitte">
+  <a href="#datenschutz" class="active">Datenschutz</a>
+  <a href="#impressum">Impressum</a>
+  <a href="#support">Support</a>
+</nav>
+
+<main>
+  <header class="hero">
+    <div class="app-icon" aria-hidden="true">
+      <svg viewBox="0 0 64 64" fill="none"><circle cx="24" cy="24" r="10" fill="#ffd56b"/><path d="M22 46a10 10 0 0 1 1.6-19.9A14 14 0 0 1 50.7 29 8.5 8.5 0 0 1 49 46Z" fill="#fff"/></svg>
+    </div>
+    <h1>Meteoriz</h1>
+    <p class="lead">Wetter für die Schweiz – mit Daten von MeteoSchweiz. Hier steht, was die App mit deinen Daten macht: so wenig wie möglich.</p>
+  </header>
+
+  <!-- ───────── DATENSCHUTZ ───────── -->
+  <section id="datenschutz">
+    <div class="card glass">
+      <p class="eyebrow">Datenschutzerklärung</p>
+      <h2>Kurz gesagt</h2>
+      <p class="meta">Stand: 6. Oktober 2026</p>
+
+      <div class="tiles">
+        <div class="tile"><span class="ic">🚫</span><b>Kein Konto, kein Tracking</b><span>Keine Registrierung, keine Werbung, keine Analyse-Werkzeuge.</span></div>
+        <div class="tile"><span class="ic">📍</span><b>Standort bleibt auf dem Gerät</b><span>Dein Standort wird nur lokal verwendet, um den nächsten Prognosepunkt zu finden.</span></div>
+        <div class="tile"><span class="ic">🇨🇭</span><b>Offene Daten</b><span>Prognosen und Messwerte stammen aus den offenen Daten von MeteoSchweiz.</span></div>
+      </div>
+
+      <h3>1. Verantwortliche Stelle</h3>
+      <p>Verantwortlich für die App und diese Erklärung ist die im <a href="#impressum">Impressum</a> genannte Person. Es gilt das Schweizer Bundesgesetz über den Datenschutz (DSG); soweit anwendbar auch die DSGVO.</p>
+
+      <h3>2. Welche Daten verarbeitet die App?</h3>
+      <p><strong>Wir selbst erheben, speichern und verkaufen keine personenbezogenen Daten.</strong> Es gibt keine Benutzerkonten und keinen eigenen Server, der Nutzerdaten sammelt. Bei der Nutzung der App finden folgende Verarbeitungen statt:</p>
+
+      <h3>Standort (nur mit deiner Erlaubnis)</h3>
+      <p>Wenn du es erlaubst, ermittelt die App über iOS deinen ungefähren Standort, um dir die Prognose für deinen Ort zu zeigen. Die Koordinaten werden auf deinem Gerät verwendet, um den nächstgelegenen Prognosepunkt zu bestimmen. Sie werden <strong>nicht</strong> an uns übermittelt und nicht gespeichert. Lehnst du die Freigabe ab, funktioniert die App weiterhin; du kannst Orte dann über die Suche wählen. Die Freigabe kannst du jederzeit in den iOS-Einstellungen unter «Datenschutz &amp; Sicherheit → Ortungsdienste → Meteoriz» ändern.</p>
+
+      <h3>Ortssuche und Ortsnamen (Apple)</h3>
+      <p>Wenn du nach einem Ort suchst oder wir den Namen deines Standorts anzeigen, nutzt die App die Karten- und Ortssuche von Apple (MapKit). Dabei werden deine Sucheingabe bzw. die Koordinaten an Apple übermittelt. Es gilt die <a href="https://www.apple.com/legal/privacy/de-ww/" rel="noopener">Datenschutzerklärung von Apple</a>.</p>
+
+      <h3>Wetterdaten abrufen</h3>
+      <p>Prognosen und Messwerte lädt die App über das Internet von folgenden Stellen:</p>
+      <ul>
+        <li><strong>MeteoSchweiz</strong> (data.geo.admin.ch, Bund) – aktuelle Messwerte und Stationsliste.</li>
+        <li><strong>Prognose-Dateien dieser App</strong>, aufbereitet aus den offenen Daten von MeteoSchweiz und bereitgestellt über <strong>GitHub</strong> (raw.githubusercontent.com).</li>
+      </ul>
+      <p>Bei jedem Abruf sehen diese Anbieter technisch bedingt deine IP-Adresse und den Zeitpunkt der Anfrage. Aus dem Namen der abgerufenen Prognose-Datei lässt sich zudem der ungefähre Ort erkennen, für den du das Wetter ansiehst. Wir erhalten diese Abrufprotokolle nicht und führen sie nicht zusammen. Es gelten die Datenschutzbestimmungen der jeweiligen Anbieter.</p>
+
+      <h3>Lokale Speicherung auf deinem Gerät</h3>
+      <p>Damit die App auch ohne Verbindung etwas anzeigt, speichert sie den zuletzt angezeigten Stand (Prognose und Ort) lokal in der App. Diese Daten verlassen dein Gerät nicht und werden beim Löschen der App entfernt.</p>
+
+      <h3>3. Keine Weitergabe, kein Tracking</h3>
+      <p>Die App enthält keine Werbung, keine Analyse- oder Tracking-Bausteine von Drittanbietern und gibt keine Daten zu Werbezwecken weiter. Es findet kein Tracking im Sinne von Apples App-Tracking-Transparenz statt.</p>
+
+      <h3>4. Deine Rechte</h3>
+      <p>Da wir keine personenbezogenen Daten von dir speichern, können wir dir in der Regel keine Auskunft zu gespeicherten Daten geben. Bei Fragen zum Datenschutz oder zur Ausübung deiner Rechte erreichst du uns unter der im Impressum genannten Adresse. Du hast zudem das Recht, dich bei der zuständigen Aufsichtsbehörde (in der Schweiz: Eidgenössischer Datenschutz- und Öffentlichkeitsbeauftragter, EDÖB) zu beschweren.</p>
+
+      <h3>5. Änderungen</h3>
+      <p>Wenn sich die App ändert, passen wir diese Erklärung an. Es gilt jeweils die hier veröffentlichte Fassung.</p>
+    </div>
+
+    <div class="card glass">
+      <h2>Datenquellen &amp; Hinweis</h2>
+      <p>Quelle der Wetterdaten: <strong>Bundesamt für Meteorologie und Klimatologie MeteoSchweiz</strong>, offene Daten (OGD). Die App ist ein unabhängiges Projekt und steht in keiner Verbindung zu MeteoSchweiz oder Apple.</p>
+      <p>Wetterprognosen sind Wahrscheinlichkeitsaussagen. Für Richtigkeit und Verfügbarkeit der Angaben wird keine Gewähr übernommen. Für sicherheitsrelevante Entscheidungen oder amtliche Unwetterwarnungen nutze bitte die offiziellen Angebote von MeteoSchweiz.</p>
+    </div>
+  </section>
+
+  <!-- ───────── IMPRESSUM ───────── -->
+  <section id="impressum">
+    <div class="card glass">
+      <p class="eyebrow">Impressum</p>
+      <h2>Anbieter der App</h2>
+      <dl>
+        <dt>Name</dt><dd>Boris Beuckmann</dd>
+        <dt>Adresse</dt><dd>Schürbungert 9, 8057 Zürich, Schweiz</dd>
+        <dt>E-Mail</dt><dd>kontakt@beuckmann.ch</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ───────── SUPPORT ───────── -->
+  <section id="support">
+    <div class="card glass">
+      <p class="eyebrow">Support</p>
+      <h2>Fragen oder Probleme?</h2>
+      <p>Schreib uns an kontakt@beuckmann.ch – gerne mit Angabe deines iPhone-Modells und der iOS-Version.</p>
+      <h3>Häufige Fragen</h3>
+      <p><strong>Die App zeigt «veraltete Daten» oder keine Prognose.</strong> Prüfe deine Internetverbindung und tippe auf «Erneut versuchen». Ohne Verbindung zeigt Meteoriz den zuletzt gespeicherten Stand.</p>
+      <p><strong>Mein Standort wird nicht erkannt.</strong> Prüfe in den iOS-Einstellungen unter «Datenschutz &amp; Sicherheit → Ortungsdienste», ob Meteoriz «Beim Verwenden der App» erlaubt ist. Alternativ kannst du einen Ort über die Suche wählen.</p>
+      <p><strong>Wie oft werden die Prognosen aktualisiert?</strong> Stündlich, sobald MeteoSchweiz einen neuen Prognoselauf veröffentlicht.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 Meteoriz · Wetterdaten: MeteoSchweiz</p>
+    <p>Meteoriz ist ein unabhängiges Projekt. Es wird nicht von Apple Inc. oder MeteoSchweiz unterstützt, gesponsert oder bestätigt. «iPhone» und «Apple» sind Marken von Apple Inc.</p>
+  </footer>
+</main>
+
+<script>
+  // Aktiven Menüpunkt beim Scrollen hervorheben
+  (function(){
+    var links=[].slice.call(document.querySelectorAll('nav a'));
+    var map=links.map(function(a){return {a:a,el:document.querySelector(a.getAttribute('href'))}});
+    function update(){
+      var y=window.scrollY+120, cur=map[0];
+      map.forEach(function(m){ if(m.el && m.el.offsetTop<=y) cur=m; });
+      if(window.innerHeight+window.scrollY>=document.body.scrollHeight-4) cur=map[map.length-1];
+      links.forEach(function(a){a.classList.toggle('active',a===cur.a)});
+    }
+    window.addEventListener('scroll',update,{passive:true}); update();
+  })();
+</script>
+</body>
+</html>
