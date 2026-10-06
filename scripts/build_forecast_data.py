@@ -21,10 +21,19 @@ STAC_BASE = "https://data.geo.admin.ch/api/stac/v1"
 COLLECTION = "ch.meteoschweiz.ogd-local-forecasting"
 POI_URL = f"https://data.geo.admin.ch/{COLLECTION}/ogd-local-forecasting_meta_point.csv"
 LOCAL_TZ = ZoneInfo("Europe/Zurich")
-FORECAST_DAYS = 5  # deckt sich mit forecast_days=5 in der App
+FORECAST_DAYS = 7  # Tageswerte (Tagesreihe der App)
+# Stundenwerte reichen einen Tag weiter als die Tagesreihe, damit die Stunden-
+# ansicht des letzten Tages (Wischen über Mitternacht) noch Daten hat.
+HOURLY_DAYS = FORECAST_DAYS + 1
 
-# Parameter, die die App tatsächlich rendert (5-Tage-Prognose + Stundenkurve)
-HOURLY_PARAMS = {"tre200h0": "temp", "rre150h0": "precip"}
+# Parameter, die die App tatsächlich rendert (7-Tage-Prognose + Stundenkurve +
+# aktuelle Werte am Standort)
+HOURLY_PARAMS = {
+    "tre200h0": "temp",
+    "rre150h0": "precip",
+    "fu3010h0": "wind",  # Windgeschwindigkeit, Stundenmittel, km/h
+    "fu3010h1": "gust",  # Böenspitze, Stundenmaximum, km/h
+}
 PICTO3H_PARAM = "jww003i0"
 DAILY_PARAMS = {"tre200pn": "tmin", "tre200px": "tmax"}
 DAILY_PICTO_PARAM = "jp2000d0"
@@ -54,6 +63,7 @@ def load_pois():
                 "type_id": r["point_type_id"],
                 "lat": float(r["point_coordinates_wgs84_lat"]),
                 "lon": float(r["point_coordinates_wgs84_lon"]),
+                "height": round(float(r["point_height_masl"])) if r.get("point_height_masl") else None,
             })
         except (KeyError, ValueError):
             continue
@@ -131,6 +141,15 @@ def round_or_none(v, digits):
     return round(v, digits) if v is not None else None
 
 
+def trim_trailing_none(values):
+    """Schneidet fehlende Werte am Ende ab (Prognose reicht nicht ganz so weit),
+    damit die App dort keine Lücken, sondern einfach kürzere Arrays sieht."""
+    end = len(values)
+    while end and values[end - 1] is None:
+        end -= 1
+    return values[:end]
+
+
 def main():
     pois = load_pois()
     assets, run = latest_stac_item()
@@ -141,7 +160,7 @@ def main():
     daily_picto_data = load_param_series(assets, run, DAILY_PICTO_PARAM)
 
     start_local = local_midnight_today()
-    hours = FORECAST_DAYS * 24
+    hours = HOURLY_DAYS * 24
 
     # Ziel-Zeitpunkte EINMAL vorberechnen (nicht pro Ort neu) — als UTC-Datetimes,
     # damit sie direkt als Dict-Key gegen die {utc_datetime: value}-Serien passen.
@@ -161,6 +180,8 @@ def main():
             skipped += 1
             continue
         precip_series = hourly_data["precip"].get(key, {})
+        wind_series = hourly_data["wind"].get(key, {})
+        gust_series = hourly_data["gust"].get(key, {})
         picto3h_series = picto3h_data.get(key, {})
         tmin_series = daily_data["tmin"].get(key, {})
         tmax_series = daily_data["tmax"].get(key, {})
@@ -178,10 +199,14 @@ def main():
             "run": run,
             "start": start_local.isoformat(),
             "hourly": {
-                "temp": [round_or_none(temp_series.get(t), 1) for t in hourly_targets],
-                "precip": [round_or_none(precip_series.get(t), 2) for t in hourly_targets],
+                "temp": trim_trailing_none([round_or_none(temp_series.get(t), 1) for t in hourly_targets]),
+                "precip": trim_trailing_none([round_or_none(precip_series.get(t), 2) for t in hourly_targets]),
+                "wind": trim_trailing_none([round_or_none(wind_series.get(t), 0) for t in hourly_targets]),
+                "gust": trim_trailing_none([round_or_none(gust_series.get(t), 0) for t in hourly_targets]),
             },
-            "picto3h": [int(v) if (v := picto3h_series.get(t)) is not None else None for t in picto3h_targets],
+            "picto3h": trim_trailing_none(
+                [int(v) if (v := picto3h_series.get(t)) is not None else None for t in picto3h_targets]
+            ),
             "daily": {
                 # ISO-Datumsstrings mitliefern statt sie im JS aus "start" + Tagesindex
                 # zu rekonstruieren — new Date(...).toISOString() würde bei einem lokalen
@@ -197,7 +222,7 @@ def main():
         out_path = OUT_DIR / f"{poi['id']}-{poi['type_id']}.json"
         out_path.write_text(json.dumps(record, separators=(",", ":")), encoding="utf-8")
         written += 1
-        poi_index.append([poi["id"], poi["type_id"], poi["lat"], poi["lon"]])
+        poi_index.append([poi["id"], poi["type_id"], poi["lat"], poi["lon"], poi["height"]])
 
     # Kompakter Orts-Index für die App: Array-von-Arrays statt Objekten mit
     # Schlüsselnamen spart bei ~5600 Einträgen deutlich Platz.
