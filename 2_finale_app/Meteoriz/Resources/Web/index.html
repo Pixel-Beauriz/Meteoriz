@@ -116,6 +116,7 @@ body.view-stations .stations-view{display:block}
 .load-error-text{font-family:'DM Mono',monospace;font-size:11px;line-height:1.6;color:var(--muted);margin:10px auto 22px;max-width:300px}
 .load-error-btn{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);background:transparent;border:1px solid var(--accent);padding:14px 22px;min-height:44px;cursor:pointer;transition:background .2s}
 .load-error-btn:active{background:rgba(74,243,200,.12)}
+.forecast-credit a{display:block;width:fit-content;margin-top:6px;white-space:nowrap;color:inherit;text-decoration:underline;text-underline-offset:2px;text-decoration-color:var(--muted2)}
 .forecast-credit{font-family:'DM Mono',monospace;font-size:9.6px;letter-spacing:1px;color:var(--muted);margin-top:10px;text-align:left}
 
 /* SVG hero – positioned absolute top-right of hero section */
@@ -383,7 +384,7 @@ body.view-stations .stations-view{display:block}
       <div class="forecast-wrap" id="forecastWrap">
         <div class="forecast-loading">Prognose lädt…</div>
       </div>
-      <div class="forecast-credit">Daten von MeteoSchweiz &nbsp;·&nbsp; © Beauriz</div>
+      <div class="forecast-credit">Daten von MeteoSchweiz &nbsp;·&nbsp; © Beauriz<a href="https://pixel-beauriz.github.io/Meteoriz/legal/">Datenschutz &amp; Impressum</a></div>
     </div>
   </div>
   <svg id="weatherScene" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg"></svg>

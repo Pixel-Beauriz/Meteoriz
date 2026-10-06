@@ -189,6 +189,19 @@ struct WeatherWebView: UIViewRepresentable {
             diagnostics.log(.error, source: "WebView", "Seite konnte nicht geladen werden: \(error.localizedDescription)")
         }
 
+        /// Tippt man auf einen Link (z.B. «Datenschutz & Impressum»), öffnet er im System-Browser
+        /// statt die Wetter-Oberfläche zu ersetzen.
+        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+            if navigationAction.navigationType == .linkActivated,
+               let url = navigationAction.request.url,
+               url.scheme == "https" || url.scheme == "http" {
+                UIApplication.shared.open(url)
+                decisionHandler(.cancel)
+            } else {
+                decisionHandler(.allow)
+            }
+        }
+
         func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
             completionHandler(.performDefaultHandling, nil)
         }
