@@ -1,0 +1,8 @@
+Schriften in diesem Ordner (SIL Open Font License, Version 1.1 – https://openfontlicense.org):
+
+- Bebas Neue   – Copyright Dharma Type (Ryoichi Tsunekawa), https://github.com/dharmatype/Bebas-Neue
+- DM Mono      – Copyright 2020 The DM Mono Project Authors, https://github.com/googlefonts/dm-mono
+- DM Sans      – Copyright 2014 The DM Sans Project Authors, https://github.com/googlefonts/dm-fonts
+
+Die Schriften dürfen gemäss OFL frei eingebunden und weitergegeben werden. Sie werden
+nicht einzeln verkauft und nicht verändert (nur als WOFF2 von Google Fonts bezogen).

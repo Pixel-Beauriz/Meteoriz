@@ -24,7 +24,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ch.beuckmann.meteoriz
         PRODUCT_NAME: Meteoriz
-        TARGETED_DEVICE_FAMILY: "1,2"
+        TARGETED_DEVICE_FAMILY: "1"
         SWIFT_VERSION: "5.0"
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: T74MS2C433
@@ -40,6 +40,7 @@ targets:
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
         LSRequiresIPhoneOS: true
+        ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
         UIStatusBarStyle: UIStatusBarStyleLightContent
         UIViewControllerBasedStatusBarAppearance: false
@@ -47,11 +48,6 @@ targets:
         NSLocationWhenInUseUsageDescription: "Meteoriz verwendet deinen Standort, um dir die aktuelle Temperatur und Wetterprognose für genau deinen Standort anzuzeigen. Ohne Freigabe zeigt die App ersatzweise die Station mit der höchsten Tagestemperatur in der Schweiz."
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
-        "UISupportedInterfaceOrientations~ipad":
-          - UIInterfaceOrientationPortrait
-          - UIInterfaceOrientationPortraitUpsideDown
-          - UIInterfaceOrientationLandscapeLeft
-          - UIInterfaceOrientationLandscapeRight
 schemes:
   Meteoriz:
     build:

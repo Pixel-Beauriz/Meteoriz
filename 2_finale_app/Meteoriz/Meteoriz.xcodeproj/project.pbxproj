@@ -10,6 +10,7 @@
 		15B7DD1CB229479CC7E7DDAC /* NativeGeocoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF199A91F97A8512E0F26B5D /* NativeGeocoder.swift */; };
 		20D25B6579B78F5174A4F06A /* DebugLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA29FF6DDEBDECFAA09B50CB /* DebugLogView.swift */; };
 		29D91003E554D2C505EDE05B /* WeatherWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD40BF1D2FD9B74A72922A19 /* WeatherWebView.swift */; };
+		2B619BFFC35E7A53B59BB19F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B5F483F48A1FFBCA517B7688 /* PrivacyInfo.xcprivacy */; };
 		3E622007FB250C8671E06692 /* RefreshState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5250843CC53084F7996DCE6A /* RefreshState.swift */; };
 		5FFBB929D33136339B6AE6EF /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6508E4CBDFA9B932D9C8D92C /* ContentView.swift */; };
 		722F66BD9DE57C0EFE11E3CB /* MeteorizApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42D765832B4468DBDFA16F4D /* MeteorizApp.swift */; };
@@ -29,6 +30,7 @@
 		5250843CC53084F7996DCE6A /* RefreshState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefreshState.swift; sourceTree = "<group>"; };
 		6508E4CBDFA9B932D9C8D92C /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		939C35BE84B1CA33CCAAD55B /* LocationBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationBridge.swift; sourceTree = "<group>"; };
+		B5F483F48A1FFBCA517B7688 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BE253AD3D3D583F48AFBD407 /* DiagnosticsLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsLog.swift; sourceTree = "<group>"; };
 		C44F24FE2F8B827531FDC2AD /* ErrorBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorBannerView.swift; sourceTree = "<group>"; };
 		CA29FF6DDEBDECFAA09B50CB /* DebugLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLogView.swift; sourceTree = "<group>"; };
@@ -56,6 +58,7 @@
 				939C35BE84B1CA33CCAAD55B /* LocationBridge.swift */,
 				42D765832B4468DBDFA16F4D /* MeteorizApp.swift */,
 				CF199A91F97A8512E0F26B5D /* NativeGeocoder.swift */,
+				B5F483F48A1FFBCA517B7688 /* PrivacyInfo.xcprivacy */,
 				5250843CC53084F7996DCE6A /* RefreshState.swift */,
 				FD40BF1D2FD9B74A72922A19 /* WeatherWebView.swift */,
 			);
@@ -141,6 +144,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D89F6035325398641E0B07C3 /* Assets.xcassets in Resources */,
+				2B619BFFC35E7A53B59BB19F /* PrivacyInfo.xcprivacy in Resources */,
 				76C4D0E64FBB1B336C012DA9 /* Web in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -307,7 +311,7 @@
 				PRODUCT_NAME = Meteoriz;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -332,7 +336,7 @@
 				PRODUCT_NAME = Meteoriz;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};

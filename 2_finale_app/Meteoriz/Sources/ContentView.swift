@@ -44,8 +44,9 @@ struct ContentView: View {
                 .animation(.easeOut(duration: 0.25), value: diagnostics.bannerEntry?.id)
             }
 
-            // Dezenter, kaum sichtbarer Zugang zum vollständigen Debug-Log – nur für
-            // Support/Entwicklung gedacht, stört Endnutzer im Alltag nicht.
+            // Dezenter Zugang zum vollständigen Debug-Log – nur in Debug-Builds, in der
+            // Store-Version (Release) gibt es dieses Symbol nicht.
+            #if DEBUG
             VStack {
                 Spacer()
                 HStack {
@@ -60,6 +61,7 @@ struct ContentView: View {
                     .foregroundStyle(.white.opacity(0.12))
                 }
             }
+            #endif
         }
         .background(
             // .ignoresSafeArea() nur auf der Hintergrundfarbe (nicht auf dem ganzen
