@@ -6,6 +6,16 @@
 <title>MeteoLive – Schweiz</title>
 <link rel="stylesheet" href="fonts/fonts.css">
 <script src="places.js"></script>
+<script>
+// Look (Optik): classic | glass | swiss. Quelle: ?look=… (Vorschau im Browser), sonst gespeicherte Wahl.
+(function(){
+  var L=['classic','glass','swiss','instrument'],q=null,st=null;
+  try{q=new URLSearchParams(location.search).get('look');}catch(e){}
+  try{st=localStorage.getItem('meteoriz.look');}catch(e){}
+  var l=q||st||'classic'; if(L.indexOf(l)<0) l='classic';
+  document.documentElement.setAttribute('data-look',l);
+})();
+</script>
 <style>
 :root{
   --bg:#06080d;--bg2:#0c1018;--surface:#111620;--surface2:#181f2e;
@@ -322,9 +332,153 @@ body.view-stations .stations-view{display:block}
 
   /* Fusszeile ans Ende des verfügbaren Platzes schieben statt direkt unter der
      Stundenkurve zu enden – auf grossen Screens bleibt sonst darunter Leerraum. */
-  .forecast-credit{margin-top:auto;padding-top:14px}
+  .look-picker{margin-top:auto;padding-top:18px}
+  .forecast-credit{margin-top:12px}
 }
 @media(max-width:480px){.stations-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* ═══════════════ LOOK-UMSCHALTER (gilt für alle Looks) ═══════════════ */
+.look-picker{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.look-picker .look-label{font-family:'DM Mono',monospace;font-size:9.6px;letter-spacing:1px;color:var(--muted);margin-right:4px;text-transform:uppercase}
+.look-picker button{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--muted2);background:transparent;border:1px solid var(--border);padding:7px 9px;min-height:34px;cursor:pointer}
+.look-picker button[aria-pressed=true]{color:var(--text);border-color:var(--text)}
+
+/* ═══════════════ LOOK «GLAS» – Milchglas über wetterabhängigem Himmel ═══════════════ */
+html[data-look=glass]{
+  --font-ui:-apple-system,BlinkMacSystemFont,system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --bg:#16294d;--surface:transparent;--surface2:rgba(255,255,255,.14);
+  --border:rgba(255,255,255,.26);--accent:#fff;--text:#fff;--muted:rgba(255,255,255,.68);--muted2:rgba(255,255,255,.88);
+  --glass:rgba(16,32,66,.24);--glass-edge:rgba(255,255,255,.30);
+}
+html[data-look=glass] body{--sky:radial-gradient(120% 60% at 85% 0%,rgba(255,255,255,.34),transparent 60%),radial-gradient(90% 50% at 0% 100%,rgba(130,200,255,.30),transparent 60%),linear-gradient(180deg,#2a6fd0 0%,#4593e0 50%,#5ca3df 100%);font-family:var(--font-ui);font-weight:400;text-shadow:0 1px 10px rgba(0,20,60,.18)}
+html[data-look=glass] body[data-sky=night]{--sky:radial-gradient(110% 55% at 80% 0%,rgba(130,150,255,.28),transparent 60%),linear-gradient(180deg,#0a1230 0%,#16275a 55%,#27367a 100%)}
+html[data-look=glass] body[data-sky=cloudy]{--sky:radial-gradient(120% 60% at 85% 0%,rgba(255,255,255,.22),transparent 60%),linear-gradient(180deg,#4b5b70 0%,#5f7188 55%,#74869b 100%)}
+html[data-look=glass] body[data-sky=rain]{--sky:radial-gradient(120% 60% at 85% 0%,rgba(150,190,230,.20),transparent 60%),linear-gradient(180deg,#2a394d 0%,#3c5066 55%,#4f677f 100%)}
+html[data-look=glass] body[data-sky=snow]{--sky:radial-gradient(120% 60% at 85% 0%,rgba(255,255,255,.30),transparent 60%),linear-gradient(180deg,#566f8c 0%,#6a85a3 55%,#7c97b3 100%)}
+html[data-look=glass] body[data-sky=storm]{--sky:radial-gradient(100% 50% at 70% 0%,rgba(150,140,255,.20),transparent 60%),linear-gradient(180deg,#161a29 0%,#282e45 55%,#3d4460 100%)}
+html[data-look=glass] body[data-sky=fog]{--sky:radial-gradient(120% 60% at 85% 0%,rgba(255,255,255,.25),transparent 60%),linear-gradient(180deg,#616e7a 0%,#76838f 55%,#8b97a2 100%)}
+html[data-look=glass] :is(.local-station-name,.local-station-meta,.local-temp-big,.local-detail,.day-name,.day-max,.day-min,.forecast-title,.forecast-loading,.detail-title,.detail-sun-left,.forecast-credit,.look-picker button,.look-picker .look-label,.mobile-location-input,.location-search,.suggest-item,.geo-status,.stale-note-text,.stale-note-btn,.load-error-title,.load-error-text,.load-error-btn){font-family:var(--font-ui)}
+html[data-look=glass] .hero{background:transparent}
+html[data-look=glass] .hero-bg{position:fixed;inset:0;z-index:0;background:var(--sky)}
+html[data-look=glass] .aurora{display:none}
+html[data-look=glass] .local-card{background:transparent;border:0;padding-left:12px;padding-right:12px}
+html[data-look=glass] .local-card-header{justify-content:center;text-align:center}
+html[data-look=glass] .local-station-name{font-size:30px;font-weight:600;letter-spacing:-.01em;line-height:1.1;color:#fff}
+html[data-look=glass] .local-temp-row{align-items:center}
+html[data-look=glass] .local-temp-big{font-size:clamp(80px,27vw,112px);font-weight:200;letter-spacing:-.04em;line-height:1.02;color:#fff}
+html[data-look=glass] .mobile-controls-row{background:var(--glass);border:1px solid var(--glass-edge);border-radius:16px;padding:2px 14px;-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%)}
+html[data-look=glass] .mobile-controls-row:focus-within{border-color:rgba(255,255,255,.75)}
+html[data-look=glass] .mobile-geo-btn{color:#fff}
+html[data-look=glass] .mobile-location-input{font-size:17px;letter-spacing:0;color:#fff}
+html[data-look=glass] .mobile-location-input::placeholder{color:var(--muted)}
+html[data-look=glass] .suggest-dropdown{background:rgba(20,34,64,.80);-webkit-backdrop-filter:blur(30px);backdrop-filter:blur(30px);border:1px solid var(--glass-edge);border-radius:16px;margin-top:8px;box-shadow:0 14px 34px rgba(0,10,40,.35)}
+html[data-look=glass] .suggest-item{color:var(--muted2);letter-spacing:0;font-size:15px;border-bottom-color:rgba(255,255,255,.12)}
+html[data-look=glass] .suggest-item:hover,html[data-look=glass] .suggest-item.highlight{background:rgba(255,255,255,.12);color:#fff}
+html[data-look=glass] .forecast-wrap{border-top:0;margin-top:20px;padding-top:0}
+html[data-look=glass] .forecast-title{font-size:12px;letter-spacing:.08em;font-weight:600;color:var(--muted2);margin:0 4px 10px}
+html[data-look=glass] .day-cell{background:var(--glass);border:1px solid var(--glass-edge);border-radius:24px;-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
+html[data-look=glass] .day-cell:hover{background:var(--glass);border-color:var(--glass-edge)}
+html[data-look=glass] .day-cell.active{background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.62)}
+html[data-look=glass] .day-name{font-size:14px;font-weight:600;letter-spacing:.02em;color:#fff;text-transform:none}
+html[data-look=glass] .day-max{font-size:34px;font-weight:300;letter-spacing:-.02em;color:#fff}
+html[data-look=glass] .day-min{font-size:15px;color:var(--muted2)}
+html[data-look=glass] .detail-inner{border:1px solid var(--glass-edge);background:var(--glass);border-radius:28px;margin-top:6px;padding:16px 0 14px;overflow:hidden;-webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);box-shadow:0 8px 24px rgba(0,20,60,.12),inset 0 1px 0 rgba(255,255,255,.22)}
+html[data-look=glass] .detail-title{font-size:12px;letter-spacing:.08em;font-weight:600;color:var(--muted2);padding:0 18px}
+html[data-look=glass] .detail-sun-left{padding:6px 18px 0;font-size:14px;letter-spacing:0;color:var(--muted2)}
+html[data-look=glass] .stale-note{border:1px solid rgba(255,214,130,.55);background:rgba(255,190,70,.18);border-radius:16px}
+html[data-look=glass] .stale-note-text{color:#ffe9b8;letter-spacing:0;font-size:13px}
+html[data-look=glass] .stale-note-btn{color:#fff;letter-spacing:0;font-size:13px;text-transform:none;font-weight:600}
+html[data-look=glass] .load-error-title{font-size:26px;font-weight:600;letter-spacing:0}
+html[data-look=glass] .load-error-text{color:var(--muted2);font-size:14px}
+html[data-look=glass] .load-error-btn{color:#fff;border:1px solid var(--glass-edge);background:var(--glass);border-radius:14px;letter-spacing:0;font-size:15px;text-transform:none}
+html[data-look=glass] .forecast-credit{font-size:12px;letter-spacing:0;color:var(--muted)}
+html[data-look=glass] .forecast-credit a{text-decoration-color:rgba(255,255,255,.5)}
+html[data-look=glass] .look-picker .look-label{font-size:12px;letter-spacing:0;text-transform:none}
+html[data-look=glass] .look-picker button{border-radius:999px;border:1px solid var(--glass-edge);background:var(--glass);font-size:13px;letter-spacing:0;padding:7px 11px}
+html[data-look=glass] .look-picker button[aria-pressed=true]{background:rgba(255,255,255,.28);color:#fff;border-color:rgba(255,255,255,.7)}
+html[data-look=glass] body::after{background:rgba(14,30,66,.22);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+
+/* ═══════════════ LOOK «SWISS» – Helvetica, Raster, Linien, ein Signalrot ═══════════════ */
+html[data-look=swiss]{
+  --font-ui:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --bg:#000;--surface:#000;--surface2:#000;--border:rgba(255,255,255,.28);
+  --accent:#ff2a2a;--text:#fff;--muted:#8c8c8c;--muted2:#d2d2d2;
+}
+html[data-look=swiss] body{font-family:var(--font-ui);font-weight:400}
+html[data-look=swiss] body::before{display:none}
+html[data-look=swiss] :is(.hero-bg,.aurora){display:none}
+html[data-look=swiss] :is(.local-station-name,.local-station-meta,.local-temp-big,.local-detail,.day-name,.day-max,.day-min,.forecast-title,.forecast-loading,.detail-title,.detail-sun-left,.forecast-credit,.look-picker button,.look-picker .look-label,.mobile-location-input,.location-search,.suggest-item,.geo-status,.stale-note-text,.stale-note-btn,.load-error-title,.load-error-text,.load-error-btn){font-family:var(--font-ui)}
+html[data-look=swiss] .mobile-controls-row{border-bottom:2px solid #fff;margin-bottom:22px}
+html[data-look=swiss] .mobile-controls-row:focus-within{border-bottom-color:var(--accent)}
+html[data-look=swiss] .mobile-geo-btn{color:var(--accent)}
+html[data-look=swiss] .mobile-location-input{font-size:17px;font-weight:500;letter-spacing:0}
+html[data-look=swiss] .suggest-dropdown{background:#111;border:1px solid #fff;border-radius:0;box-shadow:none}
+html[data-look=swiss] .suggest-item{font-size:15px;letter-spacing:0;color:var(--muted2)}
+html[data-look=swiss] .suggest-item:hover,html[data-look=swiss] .suggest-item.highlight{background:var(--accent);color:#fff}
+html[data-look=swiss] .local-station-name{font-size:34px;font-weight:700;letter-spacing:-.025em;line-height:1.04}
+html[data-look=swiss] .local-station-name::before{content:'';display:block;width:44px;height:8px;background:var(--accent);margin-bottom:14px}
+html[data-look=swiss] .local-temp-big{font-size:clamp(88px,31vw,132px);font-weight:700;letter-spacing:-.035em;font-variant-numeric:proportional-nums;font-feature-settings:'pnum' 1,'kern' 1;line-height:.92;color:#fff;margin:8px 0 0 -4px}
+html[data-look=swiss] .forecast-wrap{border-top:0;margin-top:26px;padding-top:0}
+html[data-look=swiss] .forecast-title{font-size:11px;font-weight:700;letter-spacing:.14em;color:#fff;border-top:2px solid #fff;padding-top:9px;margin-bottom:0}
+html[data-look=swiss] .days-row{gap:0;padding-bottom:0}
+html[data-look=swiss] .day-cell{background:transparent;border:0;border-top:5px solid transparent;border-left:1px solid var(--border);border-radius:0;padding:14px 12px 16px;gap:6px;align-items:flex-start}
+html[data-look=swiss] .day-cell:first-child{border-left:0;padding-left:0}
+html[data-look=swiss] .day-cell:hover{background:transparent;border-top-color:transparent}
+html[data-look=swiss] .day-cell.active{background:transparent;border-top-color:var(--accent)}
+html[data-look=swiss] .day-name{font-size:12px;font-weight:700;letter-spacing:.12em;color:#fff}
+html[data-look=swiss] .day-icon{font-size:30px;filter:grayscale(1) brightness(1.1)}
+html[data-look=swiss] .day-max{font-size:40px;font-weight:700;letter-spacing:-.025em;font-variant-numeric:proportional-nums;font-feature-settings:'pnum' 1,'kern' 1;color:#fff}
+html[data-look=swiss] .day-min{font-size:19px;font-weight:500;color:var(--muted)}
+html[data-look=swiss] .detail-inner{border-top:2px solid #fff;margin-top:6px;padding:12px 0 0}
+html[data-look=swiss] .detail-title{font-size:11px;font-weight:700;letter-spacing:.14em;color:#fff}
+html[data-look=swiss] .detail-sun-left{font-size:13px;letter-spacing:0;color:var(--muted2);padding-left:0}
+html[data-look=swiss] .stale-note{border:0;border-left:5px solid var(--accent);background:rgba(255,255,255,.07)}
+html[data-look=swiss] .stale-note-text{color:#fff;font-size:13px;letter-spacing:0}
+html[data-look=swiss] .stale-note-btn{color:var(--accent);font-size:13px;letter-spacing:0;font-weight:700;text-transform:none}
+html[data-look=swiss] .load-error-title{font-size:28px;font-weight:700;letter-spacing:-.02em}
+html[data-look=swiss] .load-error-text{font-size:14px;color:var(--muted2)}
+html[data-look=swiss] .load-error-btn{color:#fff;border:2px solid #fff;letter-spacing:.1em;font-size:12px;font-weight:700}
+html[data-look=swiss] .forecast-credit{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+html[data-look=swiss] .look-picker .look-label{font-size:10.5px;letter-spacing:.08em;font-weight:700}
+html[data-look=swiss] .look-picker button{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:7px 8px}
+html[data-look=swiss] .look-picker button[aria-pressed=true]{background:#fff;color:#000;border-color:#fff}
+
+/* Tagesreihe: Temperaturbalken – in allen Looks versteckt, nur «Instrument» zeigt ihn */
+.day-range{display:none}
+
+/* ═══════════════ LOOK «INSTRUMENT» – Messgeräte-Anzeige: Kacheln, Messwerte, Amber ═══════════════ */
+html[data-look=instrument]{
+  --bg:#0a0b0e;--surface:#12151a;--surface2:#181c23;--border:rgba(255,255,255,.13);
+  --accent:#f3b24a;--text:#eef0f4;--muted:#8a93a3;--muted2:#b8bfcc;
+}
+html[data-look=instrument] .hero-bg{background:radial-gradient(ellipse 90% 35% at 50% 0%,rgba(243,178,74,.08),transparent 65%)}
+html[data-look=instrument] .aurora{display:none}
+html[data-look=instrument] .mobile-geo-btn{color:var(--accent)}
+html[data-look=instrument] .mobile-controls-row:focus-within{border-bottom-color:var(--accent)}
+html[data-look=instrument] .suggest-item:hover,html[data-look=instrument] .suggest-item.highlight{background:rgba(243,178,74,.12);color:var(--text)}
+html[data-look=instrument] .local-station-name{font-size:40px;letter-spacing:1px}
+html[data-look=instrument] .local-station-meta{display:block;font-size:11px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin:4px 0 0}
+html[data-look=instrument] .local-temp-big{font-size:clamp(90px,28vw,112px);line-height:.95;color:var(--text)}
+html[data-look=instrument] .local-details{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin-top:14px}
+html[data-look=instrument] .local-detail{display:flex;flex-direction:column-reverse;gap:3px;padding:10px 12px 9px;border:1px solid var(--border);border-top:2px solid var(--accent);background:var(--surface);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+html[data-look=instrument] .local-detail strong{font-family:'Bebas Neue',sans-serif;font-size:30px;font-weight:400;letter-spacing:1px;text-transform:none;color:var(--text);line-height:1}
+html[data-look=instrument] .local-detail-sun{display:none}
+html[data-look=instrument] .forecast-wrap{border-top:0;margin-top:20px;padding-top:0}
+html[data-look=instrument] .forecast-title{color:var(--accent);display:flex;align-items:center;gap:8px}
+html[data-look=instrument] .forecast-title::before{content:'';width:8px;height:8px;background:var(--accent)}
+html[data-look=instrument] .day-cell{background:var(--surface);border:1px solid var(--border);border-top:2px solid var(--border)}
+html[data-look=instrument] .day-cell:hover{background:var(--surface2);border-color:var(--border)}
+html[data-look=instrument] .day-cell.active{background:var(--surface2);border-color:var(--accent)}
+html[data-look=instrument] .day-name{letter-spacing:2px;color:var(--muted2)}
+html[data-look=instrument] .day-cell.active .day-name{color:var(--accent)}
+html[data-look=instrument] .day-max{color:var(--text)}
+html[data-look=instrument] .day-min{font-size:15px;color:var(--muted2)}
+html[data-look=instrument] .day-range{display:block;position:relative;width:100%;height:4px;background:rgba(255,255,255,.12);margin-top:2px}
+html[data-look=instrument] .day-range span{position:absolute;top:0;bottom:0;background:var(--accent)}
+html[data-look=instrument] .detail-inner{border:1px solid var(--border);border-top:2px solid var(--accent);background:var(--surface);margin-top:8px;padding:14px 4px 12px}
+html[data-look=instrument] .detail-title{color:var(--accent);padding-left:10px}
+html[data-look=instrument] .detail-sun-left{padding-left:10px}
+html[data-look=instrument] .look-picker button[aria-pressed=true]{color:var(--accent);border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -384,6 +538,7 @@ body.view-stations .stations-view{display:block}
       <div class="forecast-wrap" id="forecastWrap">
         <div class="forecast-loading">Prognose lädt…</div>
       </div>
+      <div class="look-picker" id="lookPicker" role="group" aria-label="Look"></div>
       <div class="forecast-credit">Daten von MeteoSchweiz &nbsp;·&nbsp; © Beauriz<a href="https://pixel-beauriz.github.io/Meteoriz/legal/">Datenschutz &amp; Impressum</a></div>
     </div>
   </div>
@@ -716,6 +871,8 @@ function renderForecast(wrap, d, lat, lon){
   const dailyCodes=d.daily?.weathercode??[];
   const dailyDates=d.daily?.time??[];
   let dayCells='';
+  const rangeMins=dailyMin.slice(0,7).filter(v=>typeof v==='number'), rangeMaxs=dailyMax.slice(0,7).filter(v=>typeof v==='number');
+  const wkMin=Math.min(...rangeMins), wkMax=Math.max(...rangeMaxs), wkSpan=(wkMax-wkMin)||1;
   const hCodes=d.hourly?.weathercode??[];
   dailyDates.slice(0,7).forEach((dateStr,i)=>{
     const date=new Date(dateStr+'T12:00:00');
@@ -730,6 +887,7 @@ function renderForecast(wrap, d, lat, lon){
       <div class="day-icon">${iconInfo.html}</div>
       <div class="day-max ${cls}">${typeof max==='number'?fmtT0(max):'—'}</div>
       <div class="day-min">${typeof min==='number'?fmtT0(min):'—'}</div>
+      <div class="day-range">${(typeof min==='number'&&typeof max==='number')?`<span style="left:${((min-wkMin)/wkSpan*100).toFixed(1)}%;width:${Math.max(4,(max-min)/wkSpan*100).toFixed(1)}%"></span>`:''}</div>
     </div>`;
   });
   wrap.innerHTML=`
@@ -739,6 +897,47 @@ function renderForecast(wrap, d, lat, lon){
   activeDayIdx=null;
   setTimeout(()=>toggleDay(0),80);
 }
+
+// ── LOOKS (Optik) ──
+// Farben/Schrift der Stundenkurve (SVG) je Look; alles andere regelt das CSS über html[data-look].
+const LOOKS=[['classic','Classic'],['glass','Glas'],['swiss','Swiss'],['instrument','Instrument']];
+const F_SYS="-apple-system,BlinkMacSystemFont,'Helvetica Neue',Helvetica,sans-serif";
+const F_HELV="'Helvetica Neue',Helvetica,Arial,sans-serif";
+const PAL={
+  classic:{labelMob:'#909aaf',labelDesk:'#8a94a8',stroke:'rgba(6,8,13,0.9)',area:'#4af3c8',areaOp:.10,prob:'rgba(74,163,243,0.95)',bar:'rgba(74,163,243,0.75)',
+    mono:"'DM Mono',monospace",font:"'Bebas Neue',sans-serif",fw:400,lw:2,dot:null,
+    col:t=>t>=30?'#e84040':t>=25?'#f3d44a':t>=10?'#4af3c8':t>=0?'#4ab4f3':'#a4d8f3'},
+  glass:{labelMob:'rgba(255,255,255,.80)',labelDesk:'rgba(255,255,255,.80)',stroke:'rgba(20,40,80,.55)',area:'#ffffff',areaOp:.16,prob:'#bfe0ff',bar:'rgba(255,255,255,.55)',
+    mono:F_SYS,font:F_SYS,fw:500,lw:2.5,dot:null,
+    col:t=>t>=30?'#ffb08a':t>=25?'#ffe08a':t>=10?'#ffffff':t>=0?'#cfe9ff':'#e4f4ff'},
+  swiss:{labelMob:'#a0a0a0',labelDesk:'#a0a0a0',stroke:'#000',area:'#ffffff',areaOp:0,prob:'#ff2a2a',bar:'#ff2a2a',
+    mono:F_HELV,font:F_HELV,fw:700,lw:3,dot:'#ffffff',gray:true,lblScale:1.22,
+    col:()=>'#ffffff'},
+  instrument:{labelMob:'#8a93a3',labelDesk:'#8a93a3',stroke:'#0a0b0e',area:'#f3b24a',areaOp:.12,prob:'#4ac3f3',bar:'rgba(74,195,243,.8)',
+    mono:"'DM Mono',monospace",font:"'DM Mono',monospace",fw:400,lw:2,dot:null,
+    col:()=>'#f3b24a'}
+};
+function currentLook(){return document.documentElement.getAttribute('data-look')||'classic';}
+function pal(){return PAL[currentLook()]||PAL.classic;}
+function renderLookPicker(){
+  const el=document.getElementById('lookPicker');
+  if(!el) return;
+  const cur=currentLook();
+  el.innerHTML='<span class="look-label">Look</span>'+LOOKS.map(([id,name])=>`<button type="button" data-look="${id}" aria-pressed="${id===cur}">${name}</button>`).join('');
+}
+function setLook(id){
+  if(!PAL[id]) id='classic';
+  document.documentElement.setAttribute('data-look',id);
+  try{localStorage.setItem('meteoriz.look',id);}catch(e){}
+  renderLookPicker();
+  // Die Kurve ist ein SVG mit festen Farben – mit der neuen Palette neu aufbauen.
+  if(forecastData&&activeDayIdx!=null) buildDetailPanel(activeDayIdx);
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest&&e.target.closest('#lookPicker button[data-look]');
+  if(b) setLook(b.dataset.look);
+});
+document.addEventListener('DOMContentLoaded',renderLookPicker);
 
 // ── DAY DETAIL PANEL ──
 // Hält die aktive Tageszelle in der (scrollbaren) Tagesreihe sichtbar, z.B. wenn man in
@@ -779,9 +978,11 @@ function buildHourlySvg(hTemps,hCodes,hPrecip,hProb,startOff,gKey){
   const iconZone=isMob?64:36, curveH=isMob?120:78;
   // Mit Regenwahrscheinlichkeit bekommt die Zeitzeile eine zweite Zeile («24 %» unter der Uhrzeit).
   const hasProb=hProb.some(v=>v>=10);
-  const barZone=isMob?49:59, timeZone=(isMob?14:18)+(hasProb?(isMob?18:20):0);
-  const iFnt=isMob?36:24, tFnt=isMob?24:19, lFnt=isMob?15.5:13, dotR=isMob?4:3;
-  const labelFill=isMob?'#909aaf':'#8a94a8';
+  const barZone=isMob?49:59, timeZone=(isMob?14:18)+(hasProb?(isMob?18:20):0)+Math.round(((pal().lblScale||1)-1)*(isMob?24:20));
+  const lblK=pal().lblScale||1;
+  const iFnt=isMob?36:24, tFnt=isMob?24:19, lFnt=(isMob?15.5:13)*lblK, dotR=isMob?4:3;
+  const P=pal();
+  const labelFill=isMob?P.labelMob:P.labelDesk;
   const totalH=iconZone+curveH+barZone+timeZone;
   const minV=Math.min(...hTemps)-1, maxV=Math.max(...hTemps)+1, range=maxV-minV||1;
   const xOf=i=>pad+(i/(n-1))*(W-pad*2);
@@ -798,20 +999,20 @@ function buildHourlySvg(hTemps,hCodes,hPrecip,hProb,startOff,gKey){
     const hr=String((startOff+i)%24).padStart(2,'0');
     const probOn=hasProb&&hProb[xi]>=10;
     const tY=totalH-5-(hasProb?(isMob?18:20):0);
-    timeLabels+=`<text x="${xOf(xi).toFixed(1)}" y="${tY}" font-family="'DM Mono',monospace" font-size="${lFnt}" fill="${labelFill}" text-anchor="middle">${hr}:00</text>`;
-    if(probOn) timeLabels+=`<text x="${xOf(xi).toFixed(1)}" y="${totalH-5}" font-family="'DM Mono',monospace" font-size="${lFnt-1.5}" fill="rgba(74,163,243,0.95)" text-anchor="middle">${Math.round(hProb[xi])}%</text>`;
+    timeLabels+=`<text x="${xOf(xi).toFixed(1)}" y="${tY}" font-family="${P.mono}" font-size="${lFnt}" fill="${labelFill}" text-anchor="middle">${hr}:00</text>`;
+    if(probOn) timeLabels+=`<text x="${xOf(xi).toFixed(1)}" y="${totalH-5}" font-family="${P.mono}" font-size="${lFnt-1.5}" fill="${P.prob}" text-anchor="middle">${Math.round(hProb[xi])}%</text>`;
   }
 
   // Icons + Temperaturmarken alle 3 h über den ganzen Streifen
   let icons='', tempMarks='';
-  const tCol=t=>t>=30?'#e84040':t>=25?'#f3d44a':t>=10?'#4af3c8':t>=0?'#4ab4f3':'#a4d8f3';
+  const tCol=P.col;
   for(let i=0;i<n;i+=3){
     const hr=(startOff+i)%24;
     const x=xOf(i), y=yOf(hTemps[i]), col=tCol(hTemps[i]);
-    icons+=`<text x="${x.toFixed(1)}" y="${iconZone-8}" font-family="serif" font-size="${iFnt}" text-anchor="middle">${wIcon(hCodes[i]??0,hr>=21||hr<6)}</text>`;
+    icons+=`<text x="${x.toFixed(1)}" y="${iconZone-8}" font-family="serif" font-size="${iFnt}" text-anchor="middle"${P.gray?` filter="url(#gs${gKey})"`:''}>${wIcon(hCodes[i]??0,hr>=21||hr<6)}</text>`;
     const lbl=(hTemps[i]>=0?'+':'')+Math.round(hTemps[i])+'°';
-    tempMarks+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${dotR}" fill="${col}" stroke="rgba(6,8,13,0.9)" stroke-width="1.5"/>`;
-    tempMarks+=`<text x="${x.toFixed(1)}" y="${(y-dotR-4).toFixed(1)}" font-family="'Bebas Neue',sans-serif" font-size="${tFnt}" fill="${col}" text-anchor="middle">${lbl}</text>`;
+    tempMarks+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${dotR}" fill="${P.dot||col}" stroke="${P.stroke}" stroke-width="1.5"/>`;
+    tempMarks+=`<text x="${x.toFixed(1)}" y="${(y-dotR-4).toFixed(1)}" font-family="${P.font}" font-weight="${P.fw}" font-size="${tFnt}" fill="${col}" text-anchor="middle">${lbl}</text>`;
   }
 
   const gId='cg'+gKey;
@@ -824,17 +1025,18 @@ function buildHourlySvg(hTemps,hCodes,hPrecip,hProb,startOff,gKey){
   hPrecip.forEach((p,i)=>{
     if(!(p>0)) return;
     const bh=Math.max(3,Math.sqrt(p/maxP)*barMaxH);
-    bars+=`<rect x="${(xOf(i)-bWidth/2).toFixed(1)}" y="${(barBase-bh).toFixed(1)}" width="${bWidth.toFixed(1)}" height="${bh.toFixed(1)}" fill="rgba(74,163,243,0.75)" rx="1"/>`;
+    bars+=`<rect x="${(xOf(i)-bWidth/2).toFixed(1)}" y="${(barBase-bh).toFixed(1)}" width="${bWidth.toFixed(1)}" height="${bh.toFixed(1)}" fill="${P.bar}" rx="1"/>`;
   });
 
   const svgStyle=isMob?`width:${(W/360*100).toFixed(3)}%;height:auto;display:block`:`height:${totalH}px`;
   return `<svg class="detail-curve" style="${svgStyle}" viewBox="0 0 ${W} ${totalH}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
     <defs>
+      ${P.gray?`<filter id="gs${gKey}" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0"/></filter>`:''}
       <linearGradient id="${gId}" x1="0%" y1="0%" x2="100%" y2="0%">${gStops}</linearGradient>
-      <linearGradient id="dfg${gKey}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4af3c8" stop-opacity=".10"/><stop offset="100%" stop-color="#4af3c8" stop-opacity="0"/></linearGradient>
+      <linearGradient id="dfg${gKey}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${P.area}" stop-opacity="${P.areaOp}"/><stop offset="100%" stop-color="${P.area}" stop-opacity="0"/></linearGradient>
     </defs>
     <polygon points="${pad},${curveBot} ${pts} ${W-pad},${curveBot}" fill="url(#dfg${gKey})"/>
-    <polyline points="${pts}" fill="none" stroke="url(#${gId})" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="${pts}" fill="none" stroke="url(#${gId})" stroke-width="${P.lw}" stroke-linecap="round" stroke-linejoin="round"/>
     ${icons}${tempMarks}${bars}${timeLabels}
   </svg>`;
 }
@@ -1166,6 +1368,10 @@ function drawWeather(s){
   const hot=s.temp>=28;
   const sunny=wc===0||(wc<0&&!cloudy&&!rainy&&!stormy&&!foggy&&!snowy);
   const mixed=wc===1||wc===2||(wc<0&&s.humidity>60&&!rainy&&!stormy&&!cloudy&&!foggy&&!snowy);
+
+  // Himmel für den Glas-Look: ?sky=rain usw. erzwingt einen Zustand (Vorschau im Browser).
+  let forcedSky=null; try{forcedSky=new URLSearchParams(location.search).get('sky');}catch(e){}
+  document.body.setAttribute('data-sky',forcedSky||(stormy?'storm':snowy?'snow':rainy?'rain':foggy?'fog':cloudy?'cloudy':night?'night':'day'));
 
   let h=`<defs><filter id="b4"><feGaussianBlur stdDeviation="4"/></filter><filter id="b8"><feGaussianBlur stdDeviation="8"/></filter><filter id="b12"><feGaussianBlur stdDeviation="12"/></filter></defs>`;
 
